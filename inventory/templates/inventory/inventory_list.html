@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-dark min-vh-100 p-3">
+            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'product_list' %}" class="nav-link text-white"><i class="bi bi-box"></i> Products</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'inventory_list' %}" class="nav-link text-white active"><i class="bi bi-stack"></i> Inventory</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'low_stock' %}" class="nav-link text-warning"><i class="bi bi-exclamation-triangle"></i> Low Stock</a></li>
+                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
+        <div class="col-md-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="bi bi-stack"></i> Inventory</h3>
+                <div>
+                    <a href="{% url 'stock_receive' %}" class="btn btn-success me-2"><i class="bi bi-plus-circle"></i> Receive Stock</a>
+                    <a href="{% url 'stock_adjust' %}" class="btn btn-warning"><i class="bi bi-sliders"></i> Adjust Stock</a>
+                </div>
+            </div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>In Stock</th>
+                                <th>Reorder Level</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ product.product_name }}</td>
+                                <td>{{ product.category }}</td>
+                                <td>{{ product.quantity_in_stock }}</td>
+                                <td>{{ product.reorder_level }}</td>
+                                <td>
+                                    {% if product.is_low_stock %}
+                                        <span class="badge bg-danger">Low Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-success">OK</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center">No products found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

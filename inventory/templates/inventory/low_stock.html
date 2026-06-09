@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-dark min-vh-100 p-3">
+            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'product_list' %}" class="nav-link text-white"><i class="bi bi-box"></i> Products</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'inventory_list' %}" class="nav-link text-white"><i class="bi bi-stack"></i> Inventory</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'low_stock' %}" class="nav-link text-warning active"><i class="bi bi-exclamation-triangle"></i> Low Stock</a></li>
+                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
+        <div class="col-md-10 p-4">
+            <h3 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Low Stock Alert</h3>
+            <div class="card shadow mt-3">
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="table-danger">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>In Stock</th>
+                                <th>Reorder Level</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ product.product_name }}</td>
+                                <td>{{ product.category }}</td>
+                                <td class="text-danger fw-bold">{{ product.quantity_in_stock }}</td>
+                                <td>{{ product.reorder_level }}</td>
+                                <td>
+                                    <a href="{% url 'stock_receive' %}" class="btn btn-sm btn-success">Restock</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-success">All products are well stocked!</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
