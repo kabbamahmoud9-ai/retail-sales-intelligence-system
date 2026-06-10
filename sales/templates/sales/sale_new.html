@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-dark min-vh-100 p-3">
+            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'sale_list' %}" class="nav-link text-white"><i class="bi bi-cart"></i> Sales</a></li>
+                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
+        <div class="col-md-10 p-4">
+            <h3><i class="bi bi-cart-plus"></i> New Sale</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-primary text-white">Sale Details</div>
+                    <div class="card-body">
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-success text-white">Sale Items</div>
+                    <div class="card-body">
+                        {{ formset.management_form }}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for f in formset %}
+                                <tr>
+                                    <td>{{ f.product }}</td>
+                                    <td>{{ f.quantity }}</td>
+                                    <td>{{ f.unit_price }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Record Sale</button>
+                <a href="{% url 'sale_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
