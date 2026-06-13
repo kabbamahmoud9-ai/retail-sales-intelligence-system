@@ -3,7 +3,6 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
         <div class="col-md-2 bg-dark min-vh-100 p-3">
             <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
             <ul class="nav flex-column">
@@ -34,12 +33,14 @@
                 <li class="nav-item mb-2">
                     <a href="{% url 'expense_category_list' %}" class="nav-link text-white"><i class="bi bi-tags"></i> Expense Categories</a>
                 </li>
+                <li class="nav-item mb-2">
+                    <a href="{% url 'request_list' %}" class="nav-link text-white"><i class="bi bi-clipboard-check"></i> Customer Requests</a>
+                </li>
                 <li class="nav-item mt-4">
                     <a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </li>
             </ul>
         </div>
-        <!-- Main Content -->
         <div class="col-md-10 p-4">
             <h3>Welcome, {{ request.user.username }}! 👋</h3>
             <p class="text-muted">Retail Intelligence Dashboard</p>
@@ -81,7 +82,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Recent Sales Table -->
             <div class="card shadow mt-4">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Sales</h5>

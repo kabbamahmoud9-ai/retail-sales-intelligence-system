@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 bg-dark min-vh-100 p-3">
+            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'product_list' %}" class="nav-link text-white"><i class="bi bi-box"></i> Products</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'inventory_list' %}" class="nav-link text-white"><i class="bi bi-stack"></i> Inventory</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'sale_list' %}" class="nav-link text-white"><i class="bi bi-cart"></i> Sales</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'expense_list' %}" class="nav-link text-white"><i class="bi bi-cash"></i> Expenses</a></li>
+                <li class="nav-item mb-2"><a href="{% url 'request_list' %}" class="nav-link text-white active"><i class="bi bi-clipboard-check"></i> Customer Requests</a></li>
+                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </div>
+        <div class="col-md-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="bi bi-clipboard-check"></i> Customer Requests (Demand Intelligence)</h3>
+                <a href="{% url 'request_add' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Log Request</a>
+            </div>
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <h5>Pending Requests: <span class="badge bg-warning">{{ pending_count }}</span></h5>
+                </div>
+            </div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Product Requested</th>
+                                <th>Linked Product</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Qty</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requests %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ req.product_name_requested }}</td>
+                                <td>{{ req.product|default:"-" }}</td>
+                                <td>{{ req.customer_name|default:"-" }}</td>
+                                <td>{{ req.customer_phone|default:"-" }}</td>
+                                <td>{{ req.quantity_requested }}</td>
+                                <td>
+                                    {% if req.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif req.status == 'fulfilled' %}
+                                        <span class="badge bg-success">Fulfilled</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.requested_at|date:"Y-m-d" }}</td>
+                                <td>
+                                    <a href="{% url 'request_edit' req.pk %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                                    <a href="{% url 'request_delete' req.pk %}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center">No customer requests logged yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
