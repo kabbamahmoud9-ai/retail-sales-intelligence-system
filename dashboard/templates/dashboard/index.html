@@ -28,6 +28,12 @@
                 <li class="nav-item mb-2">
                     <a href="{% url 'sale_list' %}" class="nav-link text-white"><i class="bi bi-cart"></i> Sales</a>
                 </li>
+                <li class="nav-item mb-2">
+                    <a href="{% url 'expense_list' %}" class="nav-link text-white"><i class="bi bi-cash"></i> Expenses</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a href="{% url 'expense_category_list' %}" class="nav-link text-white"><i class="bi bi-tags"></i> Expense Categories</a>
+                </li>
                 <li class="nav-item mt-4">
                     <a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </li>
@@ -60,6 +66,18 @@
                     <div class="card bg-danger text-white text-center p-3">
                         <h6>Total Revenue</h6>
                         <h2>Le {{ total_revenue }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white text-center p-3">
+                        <h6>Total Expenses</h6>
+                        <h2>Le {{ total_expenses }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white text-center p-3">
+                        <h6>Net Profit</h6>
+                        <h2>Le {{ net_profit }}</h2>
                     </div>
                 </div>
             </div>
