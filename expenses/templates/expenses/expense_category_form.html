@@ -1,27 +1,25 @@
 {% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5>{{ title }}</h5>
+<div style="max-width:500px;">
+    <div class="card">
+        <div class="card-header"><h5>{{ title }}</h5></div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label-modern">{{ field.label }}</label>
+                    {{ field }}
                 </div>
-                <div class="card-body">
-                    <form method="POST">
-                        {% csrf_token %}
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                        </div>
-                        {% endfor %}
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <a href="{% url 'expense_category_list' %}" class="btn btn-secondary">Cancel</a>
-                    </form>
+                {% endfor %}
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn-primary-modern"><i class="bi bi-check-lg"></i> Save</button>
+                    <a href="{% url 'expense_category_list' %}" class="btn-secondary-modern">Cancel</a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>

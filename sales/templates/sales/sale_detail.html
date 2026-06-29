@@ -1,27 +1,57 @@
 {% extends 'base.html' %}
+{% block title %}Sale #{{ sale.id }}{% endblock %}
+{% block page_title %}Sale #{{ sale.id }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-receipt"></i> Sale #{{ sale.id }}</h3>
-        <a href="{% url 'sale_list' %}" class="btn btn-secondary">Back</a>
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Sale #{{ sale.id }}</h1>
+        <p>{{ sale.sale_date|date:"M d, Y H:i" }}</p>
     </div>
-    <div class="card shadow mb-3">
-        <div class="card-body">
-            <p><strong>Date:</strong> {{ sale.sale_date|date:"Y-m-d H:i" }}</p>
-            <p><strong>Served By:</strong> {{ sale.served_by }}</p>
-            <p><strong>Status:</strong> {{ sale.status }}</p>
-            <p><strong>Notes:</strong> {{ sale.notes }}</p>
+    <a href="{% url 'sale_list' %}" class="btn-secondary-modern">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 2fr; gap:16px;">
+    <div class="card">
+        <div class="card-header"><h5>Sale Info</h5></div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:2px;">Served By</div>
+                <div style="font-weight:600;">{{ sale.served_by }}</div>
+            </div>
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:2px;">Status</div>
+                {% if sale.status == 'completed' %}
+                    <span class="badge-modern badge-success">Completed</span>
+                {% elif sale.status == 'pending' %}
+                    <span class="badge-modern badge-warning">Pending</span>
+                {% else %}
+                    <span class="badge-modern badge-danger">Cancelled</span>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:2px;">Total Amount</div>
+                <div style="font-size:24px; font-weight:700; color:var(--success);">Le {{ sale.total_amount }}</div>
+            </div>
+            {% if sale.notes %}
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:2px;">Notes</div>
+                <div style="font-size:13px;">{{ sale.notes }}</div>
+            </div>
+            {% endif %}
         </div>
     </div>
-    <div class="card shadow">
-        <div class="card-header bg-dark text-white">Items</div>
-        <div class="card-body">
-            <table class="table">
+
+    <div class="card">
+        <div class="card-header"><h5>Items</h5></div>
+        <div class="table-wrapper">
+            <table class="modern-table">
                 <thead>
                     <tr>
                         <th>Product</th>
-                        <th>Quantity</th>
+                        <th>Qty</th>
                         <th>Unit Price</th>
                         <th>Subtotal</th>
                     </tr>
@@ -29,17 +59,17 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td>{{ item.product.product_name }}</td>
+                        <td style="font-weight:600;">{{ item.product.product_name }}</td>
                         <td>{{ item.quantity }}</td>
                         <td>Le {{ item.unit_price }}</td>
-                        <td>Le {{ item.subtotal }}</td>
+                        <td style="font-weight:600;">Le {{ item.subtotal }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
-                    <tr>
-                        <td colspan="3" class="text-end fw-bold">Total:</td>
-                        <td class="fw-bold">Le {{ sale.total_amount }}</td>
+                    <tr style="background:var(--body-bg);">
+                        <td colspan="3" style="text-align:right; font-weight:700; padding:13px 16px;">Total:</td>
+                        <td style="font-weight:700; color:var(--success); padding:13px 16px;">Le {{ sale.total_amount }}</td>
                     </tr>
                 </tfoot>
             </table>

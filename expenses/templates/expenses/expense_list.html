@@ -1,65 +1,65 @@
 {% extends 'base.html' %}
+{% block title %}Expenses{% endblock %}
+{% block page_title %}Expenses{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 bg-dark min-vh-100 p-3">
-            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'product_list' %}" class="nav-link text-white"><i class="bi bi-box"></i> Products</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'inventory_list' %}" class="nav-link text-white"><i class="bi bi-stack"></i> Inventory</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'sale_list' %}" class="nav-link text-white"><i class="bi bi-cart"></i> Sales</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'expense_list' %}" class="nav-link text-white active"><i class="bi bi-cash"></i> Expenses</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'expense_category_list' %}" class="nav-link text-white"><i class="bi bi-tags"></i> Expense Categories</a></li>
-                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-            </ul>
-        </div>
-        <div class="col-md-10 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="bi bi-cash"></i> Expenses</h3>
-                <a href="{% url 'expense_add' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Add Expense</a>
-            </div>
-            <div class="card shadow mb-3">
-                <div class="card-body">
-                    <h5>Total Expenses: <span class="text-danger">Le {{ total }}</span></h5>
-                </div>
-            </div>
-            <div class="card shadow">
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>#</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Amount</th>
-                                <th>Date</th>
-                                <th>Recorded By</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for expense in expenses %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ expense.description }}</td>
-                                <td>{{ expense.category }}</td>
-                                <td>Le {{ expense.amount }}</td>
-                                <td>{{ expense.expense_date }}</td>
-                                <td>{{ expense.recorded_by }}</td>
-                                <td>
-                                    <a href="{% url 'expense_delete' expense.pk %}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="7" class="text-center">No expenses recorded yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Expenses</h1>
+        <p>Track all business expenses</p>
+    </div>
+    <a href="{% url 'expense_add' %}" class="btn-primary-modern">
+        <i class="bi bi-plus-lg"></i> Add Expense
+    </a>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+    <div>
+        <div style="font-size:12px; color:var(--text-muted);">Total Expenses</div>
+        <div style="font-size:24px; font-weight:700; color:var(--danger);">Le {{ total }}</div>
+    </div>
+    <a href="{% url 'expense_category_list' %}" class="btn-secondary-modern">
+        <i class="bi bi-tags"></i> Manage Categories
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Recorded By</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td style="color:var(--text-muted); font-size:12px;">{{ forloop.counter }}</td>
+                    <td style="font-weight:600;">{{ expense.description }}</td>
+                    <td>{{ expense.category|default:"—" }}</td>
+                    <td style="font-weight:600; color:var(--danger);">Le {{ expense.amount }}</td>
+                    <td>{{ expense.expense_date }}</td>
+                    <td>{{ expense.recorded_by }}</td>
+                    <td>
+                        <a href="{% url 'expense_delete' expense.pk %}" class="btn-icon delete" title="Delete"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">
+                    <div class="empty-state">
+                        <i class="bi bi-receipt"></i>
+                        <p>No expenses recorded yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

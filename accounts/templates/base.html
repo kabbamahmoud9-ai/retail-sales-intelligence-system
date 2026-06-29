@@ -3,24 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retail Intelligence System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <title>{% block title %}Retail IQ{% endblock %} — Retail Intelligence</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% if messages %}
-        <div class="container mt-2">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
+
+<!-- Hidden Django Messages (converted to toasts by JS) -->
+{% if messages %}
+{% for message in messages %}
+<div class="django-message" data-text="{{ message }}" data-type="{{ message.tags }}" style="display:none;"></div>
+{% endfor %}
+{% endif %}
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- Notification Overlay -->
+<div class="notif-overlay" id="notifOverlay" onclick="toggleNotifications()"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">
+            <i class="bi bi-shop"></i>
         </div>
-    {% endif %}
+        <div class="sidebar-logo-text">
+            <h3>Retail IQ</h3>
+            <span>Intelligence Platform</span>
+        </div>
+    </div>
 
-    {% block content %}{% endblock %}
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <nav>
+            <div class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </div>
+        </nav>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Catalogue</div>
+        <nav>
+            <div class="nav-item">
+                <a href="{% url 'product_list' %}" class="nav-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-box-seam"></i> Products
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'category_list' %}" class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-tags"></i> Categories
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'supplier_list' %}" class="nav-link {% if 'supplier' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-truck"></i> Suppliers
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Operations</div>
+        <nav>
+            <div class="nav-item">
+                <a href="{% url 'inventory_list' %}" class="nav-link {% if 'inventory' in request.resolver_match.url_name or 'stock' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-layers"></i> Inventory
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'sale_list' %}" class="nav-link {% if 'sale' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-cart3"></i> Sales
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'expense_list' %}" class="nav-link {% if 'expense' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-receipt"></i> Expenses
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'request_list' %}" class="nav-link {% if 'request' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-clipboard-check"></i> Customer Requests
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Intelligence</div>
+        <nav>
+            <div class="nav-item">
+                <a href="{% url 'low_stock' %}" class="nav-link {% if 'low_stock' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-exclamation-triangle"></i> Low Stock
+                    <span class="nav-badge" id="lowStockBadge" style="display:none;">!</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="{% url 'logout' %}" class="nav-link" style="color: #EF4444;">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
+    </div>
+</aside>
+
+<!-- ===== MAIN WRAPPER ===== -->
+<div class="main-wrapper">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+        </div>
+        <div class="topbar-right">
+            <!-- Notifications Bell -->
+            <button class="topbar-btn" onclick="toggleNotifications()" title="Notifications">
+                <i class="bi bi-bell"></i>
+                <span class="topbar-notif-badge" id="notifCount" style="display:none;">0</span>
+            </button>
+            <!-- Admin Link -->
+            <a href="/admin/" class="topbar-btn" title="Admin Panel">
+                <i class="bi bi-shield-check"></i>
+            </a>
+            <!-- User Avatar -->
+            <div class="user-avatar" title="{{ request.user.username }}">
+                {{ request.user.username.0|upper }}
+            </div>
+        </div>
+    </header>
+
+    <!-- NOTIFICATION PANEL -->
+    <div class="notif-panel" id="notifPanel">
+        <div class="notif-panel-header">
+            <h6><i class="bi bi-bell-fill" style="color: var(--primary); margin-right: 8px;"></i>Notifications</h6>
+            <button class="btn-icon" onclick="toggleNotifications()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="notif-list" id="notifList">
+            <div class="empty-state" style="padding: 40px 20px;">
+                <i class="bi bi-bell-slash" style="font-size:32px; opacity:0.3;"></i>
+                <p style="margin-top:12px; font-size:13px; color: var(--text-muted);">No notifications yet</p>
+                <span style="font-size:12px; color: var(--text-muted);">AI insights will appear here</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

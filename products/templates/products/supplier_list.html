@@ -1,52 +1,49 @@
 {% extends 'base.html' %}
+{% block title %}Suppliers{% endblock %}
+{% block page_title %}Suppliers{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 bg-dark min-vh-100 p-3">
-            <h5 class="text-white text-center mb-4"><i class="bi bi-shop"></i> Retail IQ</h5>
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'product_list' %}" class="nav-link text-white"><i class="bi bi-box"></i> Products</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'category_list' %}" class="nav-link text-white"><i class="bi bi-tags"></i> Categories</a></li>
-                <li class="nav-item mb-2"><a href="{% url 'supplier_list' %}" class="nav-link text-white active"><i class="bi bi-truck"></i> Suppliers</a></li>
-                <li class="nav-item mt-4"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-            </ul>
-        </div>
-        <div class="col-md-10 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="bi bi-truck"></i> Suppliers</h3>
-                <a href="{% url 'supplier_add' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Add Supplier</a>
-            </div>
-            <div class="card shadow">
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>#</th>
-                                <th>Supplier Name</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Address</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for supplier in suppliers %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ supplier.supplier_name }}</td>
-                                <td>{{ supplier.phone }}</td>
-                                <td>{{ supplier.email }}</td>
-                                <td>{{ supplier.address }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="5" class="text-center">No suppliers yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Suppliers</h1>
+        <p>Manage your product suppliers</p>
+    </div>
+    <a href="{% url 'supplier_add' %}" class="btn-primary-modern">
+        <i class="bi bi-plus-lg"></i> Add Supplier
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Supplier Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td style="color:var(--text-muted); font-size:12px;">{{ forloop.counter }}</td>
+                    <td style="font-weight:600;">{{ supplier.supplier_name }}</td>
+                    <td>{{ supplier.phone|default:"—" }}</td>
+                    <td>{{ supplier.email|default:"—" }}</td>
+                    <td>{{ supplier.address|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">
+                    <div class="empty-state">
+                        <i class="bi bi-truck"></i>
+                        <p>No suppliers yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
