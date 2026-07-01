@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Notifications</h1>
+        <p>AI-generated insights and alerts for your business</p>
+    </div>
+    <button onclick="markAllRead()" class="btn-secondary-modern">
+        <i class="bi bi-check-all"></i> Mark All Read
+    </button>
+</div>
+
+<!-- Stats Row -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px; margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FEF2F2;">
+            <i class="bi bi-exclamation-circle-fill" style="color:#EF4444;"></i>
+        </div>
+        <div class="stat-card-value">{{ all_notifications|length }}</div>
+        <div class="stat-card-label">Total Alerts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#FFFBEB;">
+            <i class="bi bi-bell-fill" style="color:#F59E0B;"></i>
+        </div>
+        <div class="stat-card-value">{{ notifications|length }}</div>
+        <div class="stat-card-label">Unread</div>
+    </div>
+</div>
+
+<!-- Notifications List -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-bell-fill" style="color:var(--primary); margin-right:8px;"></i>All Notifications</h5>
+    </div>
+    <div style="padding:8px;">
+        {% for notif in all_notifications %}
+        <div class="notif-list-item {% if not notif.is_read %}unread{% endif %}" id="notif-{{ notif.id }}">
+            <div class="notif-list-dot" style="background:{{ notif.dot_color }};"></div>
+            <div class="notif-list-icon" style="background:{{ notif.dot_color }}20;">
+                <i class="bi {{ notif.icon }}" style="color:{{ notif.dot_color }};"></i>
+            </div>
+            <div class="notif-list-content">
+                <div class="notif-list-title">{{ notif.title }}</div>
+                <div class="notif-list-message">{{ notif.message }}</div>
+                <div class="notif-list-meta">
+                    <span>{{ notif.created_at|date:"M d, Y H:i" }}</span>
+                    {% if notif.action_url %}
+                    <a href="{{ notif.action_url }}" class="notif-list-action">
+                        {{ notif.action_label }} <i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if not notif.is_read %}
+            <button onclick="markRead({{ notif.id }})" class="notif-mark-btn" title="Mark as read">
+                <i class="bi bi-check-lg"></i>
+            </button>
+            {% else %}
+            <span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">Read</span>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding:60px;">
+            <i class="bi bi-bell-slash"></i>
+            <p>No notifications yet</p>
+            <span>AI insights will appear here as your business data grows</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.notif-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+    position: relative;
+}
+.notif-list-item:hover { background: var(--body-bg); }
+.notif-list-item.unread { background: #F8FAFF; border-left: 3px solid var(--primary); }
+.notif-list-item.unread:hover { background: #EFF6FF; }
+
+.notif-list-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.notif-list-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.notif-list-content { flex: 1; }
+
+.notif-list-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.notif-list-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.notif-list-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.notif-list-action {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.notif-list-action:hover { text-decoration: underline; }
+
+.notif-mark-btn {
+    background: var(--body-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--success);
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.notif-mark-btn:hover {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+</style>
+
+{% block extra_js %}
+<script>
+function markRead(id) {
+    fetch(`/notifications/mark-read/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    }).then(() => {
+        const item = document.getElementById(`notif-${id}`);
+        item.classList.remove('unread');
+        item.querySelector('.notif-mark-btn').remove();
+        updateBadge();
+    });
+}
+
+function markAllRead() {
+    fetch('/notifications/mark-all-read/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    }).then(() => {
+        document.querySelectorAll('.notif-list-item').forEach(item => {
+            item.classList.remove('unread');
+        });
+        document.querySelectorAll('.notif-mark-btn').forEach(btn => btn.remove());
+        updateBadge();
+    });
+}
+
+function updateBadge() {
+    fetch('/notifications/api/count/')
+        .then(r => r.json())
+        .then(data => {
+            const badge = document.getElementById('notifCount');
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+}
+</script>
+{% endblock %}
+{% endblock %}

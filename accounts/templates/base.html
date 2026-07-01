@@ -102,16 +102,21 @@
     <div class="sidebar-divider"></div>
 
     <div class="sidebar-section">
-        <div class="sidebar-section-label">Intelligence</div>
-        <nav>
-            <div class="nav-item">
-                <a href="{% url 'low_stock' %}" class="nav-link {% if 'low_stock' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="bi bi-exclamation-triangle"></i> Low Stock
-                    <span class="nav-badge" id="lowStockBadge" style="display:none;">!</span>
-                </a>
-            </div>
-        </nav>
-    </div>
+    <div class="sidebar-section-label">Intelligence</div>
+    <nav>
+        <div class="nav-item">
+            <a href="{% url 'notification_list' %}" class="nav-link {% if 'notification' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-bell"></i> Notifications
+                <span class="nav-badge" id="sidebarNotifBadge" style="display:none;"></span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'low_stock' %}" class="nav-link {% if 'low_stock' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-exclamation-triangle"></i> Low Stock
+            </a>
+        </div>
+    </nav>
+</div>
 
     <div class="sidebar-footer">
         <a href="{% url 'logout' %}" class="nav-link" style="color: #EF4444;">
