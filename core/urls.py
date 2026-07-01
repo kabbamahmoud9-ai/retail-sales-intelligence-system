@@ -12,4 +12,5 @@ urlpatterns = [
     path('expenses/', include('expenses.urls')),
     path('demand/', include('demand.urls')),
     path('', include('dashboard.urls')),
+    path('store/', include('ecommerce.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

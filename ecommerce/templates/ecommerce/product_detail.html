@@ -1,0 +1,57 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; align-items:start;">
+
+    <!-- Product image -->
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border-color);">
+        {% if product.product_image %}
+            <img src="{{ product.product_image.url }}" alt="{{ product.name }}" style="width:100%; display:block;">
+        {% else %}
+            <div style="height:350px; display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--text-muted);">📦</div>
+        {% endif %}
+    </div>
+
+    <!-- Product info -->
+    <div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">
+            <a href="{% url 'ecommerce:store_home' %}" style="color:var(--primary-color);">Shop</a> / {{ product.category.name }}
+        </div>
+        <h1 style="font-size:1.75rem; font-weight:700; margin-bottom:0.5rem;">{{ product.name }}</h1>
+        <div style="font-size:2rem; font-weight:700; color:var(--primary-color); margin-bottom:1rem;">
+            Le {{ product.online_price|floatformat:2 }}
+        </div>
+
+        {% if product.description %}
+        <p style="color:var(--text-secondary); line-height:1.7; margin-bottom:1.5rem;">{{ product.description }}</p>
+        {% endif %}
+
+        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+            {% if product.quantity_in_stock > 5 %}
+                <span style="color:#10b981; font-weight:500;">✓ In Stock</span>
+            {% elif product.quantity_in_stock > 0 %}
+                <span style="color:#f59e0b; font-weight:500;">⚠ Only {{ product.quantity_in_stock }} left</span>
+            {% else %}
+                <span style="color:#ef4444; font-weight:500;">✗ Out of Stock</span>
+            {% endif %}
+        </div>
+
+        {% if product.quantity_in_stock > 0 %}
+        <form method="post" action="{% url 'ecommerce:add_to_cart' product.id %}">
+            {% csrf_token %}
+            <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.85rem; color:var(--text-muted);">Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity_in_stock }}"
+                        style="width:80px; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.5rem; text-align:center; font-family:inherit;">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary-modern" style="padding:0.75rem 2rem; font-size:1rem;">
+                🛒 Add to Cart
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

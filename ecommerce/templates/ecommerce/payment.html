@@ -1,0 +1,58 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Payment — {{ order.order_reference }}{% endblock %}
+
+{% block content %}
+<div style="max-width:560px; margin:0 auto;">
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:2rem;">
+
+        <div style="text-align:center; margin-bottom:2rem;">
+            <div style="font-size:2.5rem; margin-bottom:0.5rem;">
+                {% if order.payment_method == 'orange_money' %}🟠
+                {% elif order.payment_method == 'afrimoney' %}💙
+                {% elif order.payment_method == 'credit' %}💳
+                {% else %}💵{% endif %}
+            </div>
+            <h2 style="font-size:1.3rem; font-weight:700;">{{ order.get_payment_method_display }}</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Order {{ order.order_reference }}</p>
+        </div>
+
+        <!-- Order summary -->
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem;">
+            {% for item in items %}
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:0.5rem;">
+                <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                <span>Le {{ item.subtotal|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            <hr style="border-color:var(--border-color); margin:0.75rem 0;">
+            <div style="display:flex; justify-content:space-between; font-weight:700;">
+                <span>Total to Pay</span>
+                <span style="color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <!-- Payment instructions -->
+        <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-secondary);">
+            {% if order.payment_method == 'cash_on_delivery' %}
+                <p>💵 <strong>Cash on Delivery</strong> — Our agent will collect payment when your order is delivered. No upfront payment needed.</p>
+            {% elif order.payment_method == 'orange_money' %}
+                <p>🟠 <strong>Orange Money</strong> — Click "Confirm Payment" to simulate payment via Orange Money. A transaction reference will be generated.</p>
+            {% elif order.payment_method == 'afrimoney' %}
+                <p>💙 <strong>Afrimoney</strong> — Click "Confirm Payment" to simulate payment via Afrimoney. A transaction reference will be generated.</p>
+            {% elif order.payment_method == 'credit' %}
+                <p>💳 <strong>Credit Purchase</strong> — Le {{ order.total_amount|floatformat:2 }} will be added to your credit balance. Current available credit: Le {{ order.customer.available_credit|floatformat:2 }}.</p>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary-modern" style="width:100%; padding:0.85rem; font-size:1rem;">
+                ✓ Confirm Payment &amp; Place Order
+            </button>
+        </form>
+        <a href="{% url 'ecommerce:checkout' %}" style="display:block; text-align:center; margin-top:0.75rem; font-size:0.9rem; color:var(--text-muted);">
+            ← Back to Checkout
+        </a>
+    </div>
+</div>
+{% endblock %}

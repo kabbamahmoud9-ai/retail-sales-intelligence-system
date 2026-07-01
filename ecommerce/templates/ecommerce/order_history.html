@@ -1,0 +1,52 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<h2 style="font-size:1.5rem; font-weight:700; margin-bottom:1.5rem;">My Orders</h2>
+
+{% if orders %}
+<div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); overflow:hidden;">
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>Order Ref</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td style="font-family:monospace; font-weight:600;">{{ order.order_reference }}</td>
+                <td style="color:var(--text-muted); font-size:0.9rem;">{{ order.order_date|date:"d M Y" }}</td>
+                <td style="color:var(--text-muted);">{{ order.items.count }}</td>
+                <td style="font-weight:600; color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</td>
+                <td style="font-size:0.85rem;">{{ order.get_payment_method_display }}</td>
+                <td>
+                    <span class="order-status-badge status-{{ order.status }}">{{ order.status }}</span>
+                </td>
+             <td style="display:flex; gap:8px; align-items:center;">
+                 <a href="{% url 'ecommerce:order_detail' order.id %}" style="color:var(--primary-color); font-size:0.85rem; text-decoration:none;">View →</a>
+                {% if order.status == 'pending' %}
+                 <a href="{% url 'ecommerce:payment' order.id %}" style="font-size:0.82rem; background:#EFF6FF; color:#2563EB; padding:3px 10px; border-radius:20px; text-decoration:none; font-weight:600; border:1px solid #BFDBFE;">
+                 Complete Payment
+                 </a>
+    {% endif %}
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div style="text-align:center; padding:4rem; background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color);">
+    <div style="font-size:3rem; margin-bottom:1rem;">📦</div>
+    <p style="color:var(--text-secondary); margin-bottom:1.5rem;">You haven't placed any orders yet.</p>
+    <a href="{% url 'ecommerce:store_home' %}" class="btn-primary-modern" style="padding:0.75rem 2rem;">Start Shopping</a>
+</div>
+{% endif %}
+{% endblock %}

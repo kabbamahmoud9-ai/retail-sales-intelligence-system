@@ -1,0 +1,68 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<h2 style="font-size:1.5rem; font-weight:700; margin-bottom:1.5rem;">Checkout</h2>
+
+<form method="post">
+{% csrf_token %}
+<div style="display:grid; grid-template-columns:1fr 360px; gap:2rem; align-items:start;">
+
+    <!-- Delivery & payment form -->
+    <div>
+        <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; margin-bottom:1.5rem;">
+            <h3 style="font-weight:700; margin-bottom:1.25rem; font-size:1rem;">Delivery Details</h3>
+            <div class="form-group">
+                <label>Delivery Address *</label>
+                <textarea name="delivery_address" rows="3" required
+                    placeholder="Full delivery address">{{ customer.address }}</textarea>
+            </div>
+        </div>
+
+        <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem;">
+            <h3 style="font-weight:700; margin-bottom:1.25rem; font-size:1rem;">Payment Method</h3>
+            {% for value, label in payment_choices %}
+            <label style="display:flex; align-items:center; gap:0.75rem; padding:0.85rem; border:1px solid var(--border-color); border-radius:var(--radius-md); margin-bottom:0.75rem; cursor:pointer; transition: border-color 0.2s;">
+                <input type="radio" name="payment_method" value="{{ value }}" required
+                    {% if value == 'cash_on_delivery' %}checked{% endif %}>
+                <div>
+                    <div style="font-weight:500; font-size:0.9rem;">{{ label }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">
+                        {% if value == 'cash_on_delivery' %}Pay when your order arrives{% endif %}
+                        {% if value == 'orange_money' %}Instant mobile payment via Orange Money{% endif %}
+                        {% if value == 'afrimoney' %}Instant mobile payment via Afrimoney{% endif %}
+                        {% if value == 'credit' %}
+                            Available credit: Le {{ customer.available_credit|floatformat:2 }}
+                        {% endif %}
+                    </div>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Order summary -->
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem;">
+        <h3 style="font-weight:700; margin-bottom:1.25rem; font-size:1rem;">Your Order</h3>
+        {% for line in cart_lines %}
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size:0.9rem;">
+            <span>{{ line.product.name }} × {{ line.quantity }}</span>
+            <span style="font-weight:500;">Le {{ line.subtotal|floatformat:2 }}</span>
+        </div>
+        {% endfor %}
+        <hr style="border-color:var(--border-color); margin:1rem 0;">
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1.1rem; margin-bottom:1.5rem;">
+            <span>Total</span>
+            <span style="color:var(--primary-color);">Le {{ grand_total|floatformat:2 }}</span>
+        </div>
+        <button type="submit" class="btn-primary-modern" style="width:100%; padding:0.75rem;">
+            Continue to Payment →
+        </button>
+        <a href="{% url 'ecommerce:cart' %}" style="display:block; text-align:center; margin-top:0.75rem; font-size:0.9rem; color:var(--text-muted);">
+            ← Back to Cart
+        </a>
+    </div>
+
+</div>
+</form>
+{% endblock %}

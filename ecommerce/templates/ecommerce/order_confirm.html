@@ -1,0 +1,52 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Order Confirmed!{% endblock %}
+
+{% block content %}
+<div style="max-width:560px; margin:0 auto; text-align:center;">
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:2.5rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🎉</div>
+        <h2 style="font-size:1.5rem; font-weight:700; color:#065f46; margin-bottom:0.5rem;">Order Confirmed!</h2>
+        <p style="color:var(--text-muted); margin-bottom:1.5rem;">
+            Thank you, {{ customer.full_name }}. Your order has been placed successfully.
+        </p>
+
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem; text-align:left;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                <span style="color:var(--text-muted); font-size:0.85rem;">Order Reference</span>
+                <span style="font-weight:700; font-family:monospace;">{{ order.order_reference }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                <span style="color:var(--text-muted); font-size:0.85rem;">Payment Ref</span>
+                <span style="font-weight:500; font-family:monospace; font-size:0.9rem;">{{ order.payment_reference }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                <span style="color:var(--text-muted); font-size:0.85rem;">Payment Method</span>
+                <span>{{ order.get_payment_method_display }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-muted); font-size:0.85rem;">Total</span>
+                <span style="font-weight:700; color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <div style="text-align:left; margin-bottom:1.5rem;">
+            <p style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">Items Ordered</p>
+            {% for item in items %}
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:0.4rem 0; border-bottom:1px solid var(--border-color);">
+                <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                <span>Le {{ item.subtotal|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="display:flex; gap:1rem; justify-content:center;">
+            <a href="{% url 'ecommerce:order_history' %}" class="btn-primary-modern" style="padding:0.65rem 1.5rem;">
+                View My Orders
+            </a>
+            <a href="{% url 'ecommerce:store_home' %}" style="padding:0.65rem 1.5rem; border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-secondary); text-decoration:none; font-size:0.9rem;">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
