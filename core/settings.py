@@ -42,10 +42,12 @@ INSTALLED_APPS = [
     'inventory',
     'sales',
     'expenses',
-    'demand',   
-    'dashboard',
+    'demand',
     'ecommerce',
-    'notifications',       
+    'notifications', 
+    'forecasting',
+    'advisor',
+    'dashboard',   
 ]   
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

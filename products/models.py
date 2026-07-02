@@ -29,12 +29,13 @@ class Product(models.Model):
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     quantity_in_stock = models.IntegerField(default=0)
     reorder_level = models.IntegerField(default=5)
-    # E-commerce fields (for later)
+    is_active = models.BooleanField(default=True)  # NEW — controls forecasting/reporting scope
+    # E-commerce fields
     is_available_online = models.BooleanField(default=False)
     online_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     product_image = models.ImageField(upload_to='products/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    ...
     def __str__(self):
         return self.product_name
 

@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from products.models import Product
 from sales.models import Sale
 from expenses.models import Expense
+from advisor.services import get_latest_recommendations
+
 
 @login_required
 def dashboard_view(request):
@@ -14,6 +16,11 @@ def dashboard_view(request):
     net_profit = total_revenue - total_expenses
     recent_sales = Sale.objects.select_related('served_by').order_by('-sale_date')[:5]
 
+    ai_recommendations = get_latest_recommendations(limit=5)
+    critical_high_count = get_latest_recommendations().filter(
+        priority__in=['critical', 'high']
+    ).count()
+
     context = {
         'total_products': total_products,
         'total_sales': total_sales,
@@ -22,5 +29,7 @@ def dashboard_view(request):
         'total_expenses': total_expenses,
         'net_profit': net_profit,
         'recent_sales': recent_sales,
+        'ai_recommendations': ai_recommendations,
+        'critical_high_count': critical_high_count,
     }
     return render(request, 'dashboard/index.html', context)

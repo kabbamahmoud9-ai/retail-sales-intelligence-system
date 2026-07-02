@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}AI Advisor{% endblock %}
+{% block page_title %}AI Advisor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>AI Business Advisor</h1>
+        <p>Recommendations generated from demand forecasts, stock levels, and unmet customer requests</p>
+    </div>
+</div>
+
+<!-- Priority Filter Tabs -->
+<div class="card" style="margin-bottom:16px; padding:12px 16px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="?priority=all" class="btn-secondary-modern {% if priority_filter == 'all' %}btn-primary-modern{% endif %}" style="padding:6px 14px; font-size:13px;">
+            All <span style="opacity:0.7;">({{ counts.all }})</span>
+        </a>
+        <a href="?priority=critical" class="btn-secondary-modern {% if priority_filter == 'critical' %}btn-primary-modern{% endif %}" style="padding:6px 14px; font-size:13px;">
+            <i class="bi bi-exclamation-circle-fill" style="color:#EF4444;"></i> Critical <span style="opacity:0.7;">({{ counts.critical }})</span>
+        </a>
+        <a href="?priority=high" class="btn-secondary-modern {% if priority_filter == 'high' %}btn-primary-modern{% endif %}" style="padding:6px 14px; font-size:13px;">
+            <i class="bi bi-exclamation-triangle-fill" style="color:#F59E0B;"></i> High <span style="opacity:0.7;">({{ counts.high }})</span>
+        </a>
+        <a href="?priority=medium" class="btn-secondary-modern {% if priority_filter == 'medium' %}btn-primary-modern{% endif %}" style="padding:6px 14px; font-size:13px;">
+            <i class="bi bi-info-circle-fill" style="color:#2563EB;"></i> Medium <span style="opacity:0.7;">({{ counts.medium }})</span>
+        </a>
+        <a href="?priority=low" class="btn-secondary-modern {% if priority_filter == 'low' %}btn-primary-modern{% endif %}" style="padding:6px 14px; font-size:13px;">
+            <i class="bi bi-check-circle-fill" style="color:#10B981;"></i> Low <span style="opacity:0.7;">({{ counts.low }})</span>
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Recommendation</th>
+                    <th>Recommended Action</th>
+                    <th>Priority</th>
+                    <th>Generated</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in page_obj %}
+                <tr>
+                    <td style="font-weight:600;">{{ rec.product.product_name }}</td>
+                    <td style="max-width:320px; font-size:13px; color:var(--text-secondary);">{{ rec.message }}</td>
+                    <td style="font-size:13px;">{{ rec.recommended_action }}</td>
+                    <td>
+                        {% if rec.priority == 'critical' %}
+                            <span class="badge-modern badge-danger"><i class="bi bi-exclamation-circle-fill"></i> Critical</span>
+                        {% elif rec.priority == 'high' %}
+                            <span class="badge-modern badge-warning"><i class="bi bi-exclamation-triangle-fill"></i> High</span>
+                        {% elif rec.priority == 'medium' %}
+                            <span class="badge-modern badge-info"><i class="bi bi-info-circle-fill"></i> Medium</span>
+                        {% else %}
+                            <span class="badge-modern badge-success"><i class="bi bi-check-circle-fill"></i> Low</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-muted); font-size:12px;">{{ rec.generated_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if rec.is_actioned %}
+                            <span class="badge-modern badge-success"><i class="bi bi-check-circle-fill"></i> Actioned</span>
+                        {% else %}
+                            <span class="badge-modern badge-warning"><i class="bi bi-clock-fill"></i> Open</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not rec.is_actioned %}
+                        <form method="post" action="{% url 'advisor_mark_actioned' rec.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon edit" title="Mark as Actioned">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:12px;">{{ rec.actioned_at|date:"M d, Y" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-robot"></i>
+                            <p>No recommendations yet</p>
+                            <span>Run <code>python manage.py generate_forecasts</code> to populate this page</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
+        {% if page_obj.has_previous %}
+        <a href="?priority={{ priority_filter }}&page={{ page_obj.previous_page_number }}" class="btn-secondary-modern" style="padding:6px 12px; font-size:13px;">
+            <i class="bi bi-chevron-left"></i> Prev
+        </a>
+        {% endif %}
+        <span style="font-size:13px; color:var(--text-secondary);">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?priority={{ priority_filter }}&page={{ page_obj.next_page_number }}" class="btn-secondary-modern" style="padding:6px 12px; font-size:13px;">
+            Next <i class="bi bi-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

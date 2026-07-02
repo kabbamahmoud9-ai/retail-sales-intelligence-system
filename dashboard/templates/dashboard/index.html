@@ -178,7 +178,7 @@
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:13px; color: var(--text-secondary);">AI Module</span>
-                    <span class="badge-modern badge-warning"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Planned</span>
+                    <span class="badge-modern badge-success"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Active</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:13px; color: var(--text-secondary);">Blockchain</span>
@@ -196,6 +196,39 @@
         </div>
 
     </div>
-</div>
+</div> 
+<!-- AI Insights -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-robot" style="color: #7C3AED; margin-right: 8px;"></i>AI Advisor</h5>
+                {% if critical_high_count > 0 %}
+                <span class="badge-modern badge-danger">{{ critical_high_count }} need attention</span>
+                {% endif %}
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 10px;">
+                {% for rec in ai_recommendations %}
+                <div style="border-left: 3px solid {% if rec.priority == 'critical' %}#EF4444{% elif rec.priority == 'high' %}#F59E0B{% elif rec.priority == 'medium' %}#2563EB{% else %}#10B981{% endif %}; padding: 6px 10px; background: var(--bg-subtle, #F9FAFB); border-radius: 4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <span style="font-weight:600; font-size:13px;">{{ rec.product.product_name }}</span>
+                        <span class="badge-modern {% if rec.priority == 'critical' %}badge-danger{% elif rec.priority == 'high' %}badge-warning{% elif rec.priority == 'medium' %}badge-info{% else %}badge-success{% endif %}" style="font-size:10px;">
+                            {{ rec.get_priority_display }}
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color: var(--text-secondary);">{{ rec.recommended_action }}</div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-robot"></i>
+                    <p>No AI recommendations yet</p>
+                    <span>Run forecasts to see restock insights here</span>
+                </div>
+                {% endfor %}
+                {% if ai_recommendations %}
+                <a href="{% url 'advisor_list' %}" class="btn-secondary-modern" style="justify-content: center; margin-top: 4px;">
+                    View All Recommendations <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
 
 {% endblock %}
