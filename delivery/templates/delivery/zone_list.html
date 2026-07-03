@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Delivery Zones{% endblock %}
+{% block page_title %}Delivery Zones{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Delivery Zones</h1>
+        <p>Configure delivery pricing and operational cost per zone</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a href="{% url 'zone_performance' %}" class="btn-secondary-modern">
+            <i class="bi bi-graph-up"></i> Profitability Analysis
+        </a>
+        <a href="{% url 'zone_add' %}" class="btn-primary-modern">
+            <i class="bi bi-plus-lg"></i> Add Zone
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Zone</th>
+                    <th>Base Fee</th>
+                    <th>Per KM Rate</th>
+                    <th>Avg. Distance</th>
+                    <th>Operational Cost</th>
+                    <th>Est. Delivery Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for zone in zones %}
+                <tr>
+                    <td style="font-weight:600;">{{ zone.zone_name }}</td>
+                    <td>Le {{ zone.base_fee|floatformat:2 }}</td>
+                    <td>Le {{ zone.per_km_rate|floatformat:2 }}/km</td>
+                    <td>{{ zone.average_distance_km }} km</td>
+                    <td>Le {{ zone.estimated_operational_cost|floatformat:2 }}</td>
+                    <td>{{ zone.estimated_delivery_time_minutes }} min</td>
+                    <td>
+                        {% if zone.is_active %}
+                            <span class="badge-modern badge-success"><i class="bi bi-check-circle-fill"></i> Active</span>
+                        {% else %}
+                            <span class="badge-modern badge-danger"><i class="bi bi-x-circle-fill"></i> Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <a href="{% url 'zone_edit' zone.pk %}" class="btn-icon edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'zone_delete' zone.pk %}" class="btn-icon delete" title="Delete"><i class="bi bi-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <i class="bi bi-signpost-split"></i>
+                        <p>No delivery zones yet</p>
+                        <span>Add a zone to start configuring delivery pricing</span>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

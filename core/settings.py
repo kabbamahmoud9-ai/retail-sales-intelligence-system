@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'expenses',
     'demand',
     'ecommerce',
+    'delivery',
     'notifications', 
     'forecasting',
     'advisor',

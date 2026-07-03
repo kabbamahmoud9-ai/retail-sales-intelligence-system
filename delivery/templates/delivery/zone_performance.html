@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Delivery Profitability{% endblock %}
+{% block page_title %}Delivery Profitability{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Delivery Profitability Analysis</h1>
+        <p>Delivery revenue vs. estimated operational cost, per zone (confirmed &amp; delivered orders only)</p>
+    </div>
+    <a href="{% url 'zone_list' %}" class="btn-secondary-modern">
+        <i class="bi bi-arrow-left"></i> Back to Zones
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Zone</th>
+                    <th>Orders Delivered</th>
+                    <th>Delivery Revenue</th>
+                    <th>Estimated Operational Cost</th>
+                    <th>Estimated Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in zone_stats %}
+                <tr>
+                    <td style="font-weight:600;">{{ row.zone.zone_name }}</td>
+                    <td>{{ row.order_count }}</td>
+                    <td>Le {{ row.total_revenue|floatformat:2 }}</td>
+                    <td>Le {{ row.total_cost|floatformat:2 }}</td>
+                    <td>
+                        {% if row.estimated_profit >= 0 %}
+                            <span class="badge-modern badge-success">Le {{ row.estimated_profit|floatformat:2 }}</span>
+                        {% else %}
+                            <span class="badge-modern badge-danger">Le {{ row.estimated_profit|floatformat:2 }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">
+                    <div class="empty-state">
+                        <i class="bi bi-graph-down"></i>
+                        <p>No delivery zones to analyze yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
