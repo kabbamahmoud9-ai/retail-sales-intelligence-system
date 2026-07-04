@@ -19,6 +19,7 @@ from django.contrib import messages
 from django.db import transaction
 
 from products.models import Product, Category
+from delivery.models import DeliveryZone
 from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
 
 
@@ -354,6 +355,7 @@ def checkout(request):
     customer   = get_current_customer(request)
     cart       = get_cart(request)
     cart_count = get_cart_count(cart)
+    zones      = DeliveryZone.objects.filter(is_active=True)
 
     if not cart:
         messages.warning(request, "Your cart is empty.")
@@ -394,42 +396,57 @@ def checkout(request):
     if request.method == 'POST':
         delivery_address = request.POST.get('delivery_address', '').strip()
         payment_method   = request.POST.get('payment_method', '')
+        zone_id          = request.POST.get('delivery_zone', '')
+
+        # Re-usable context builder so every early-return below stays
+        # consistent with what the template needs.
+        def error_context():
+            return {
+                'cart_lines': cart_lines, 'grand_total': grand_total,
+                'customer': customer, 'cart_count': cart_count,
+                'zones': zones, 'payment_choices': OnlineOrder.PAYMENT_CHOICES,
+            }
 
         if not delivery_address:
             messages.error(request, "Please enter a delivery address.")
-            return render(request, 'ecommerce/checkout.html', {
-                'cart_lines': cart_lines, 'grand_total': grand_total,
-                'customer': customer, 'cart_count': cart_count,
-            })
+            return render(request, 'ecommerce/checkout.html', error_context())
 
         valid_methods = [m[0] for m in OnlineOrder.PAYMENT_CHOICES]
         if payment_method not in valid_methods:
             messages.error(request, "Please select a valid payment method.")
-            return render(request, 'ecommerce/checkout.html', {
-                'cart_lines': cart_lines, 'grand_total': grand_total,
-                'customer': customer, 'cart_count': cart_count,
-            })
+            return render(request, 'ecommerce/checkout.html', error_context())
 
-        # Credit check upfront
+        # Delivery zone is required — this is the Step 11 checkout change
+        try:
+            zone = zones.get(id=int(zone_id))
+        except (ValueError, TypeError, DeliveryZone.DoesNotExist):
+            messages.error(request, "Please select a valid delivery zone.")
+            return render(request, 'ecommerce/checkout.html', error_context())
+
+        delivery_fee = zone.calculate_fee()
+        order_total  = grand_total + float(delivery_fee)
+
+        # Credit check upfront — now includes the delivery fee, since the
+        # customer's outstanding balance should reflect the full amount owed.
         if payment_method == 'credit':
-            if not customer.can_afford_credit(grand_total):
+            if not customer.can_afford_credit(order_total):
                 messages.error(
                     request,
                     f"Insufficient credit. Your available credit is "
-                    f"Le {customer.available_credit:,.2f} but your order total is "
-                    f"Le {grand_total:,.2f}."
+                    f"Le {customer.available_credit:,.2f} but your order total "
+                    f"(including delivery) is Le {order_total:,.2f}."
                 )
-                return render(request, 'ecommerce/checkout.html', {
-                    'cart_lines': cart_lines, 'grand_total': grand_total,
-                    'customer': customer, 'cart_count': cart_count,
-                })
+                return render(request, 'ecommerce/checkout.html', error_context())
 
         # Create the pending order
         order = OnlineOrder.objects.create(
             customer=customer,
             delivery_address=delivery_address,
             payment_method=payment_method,
-            total_amount=grand_total,
+            total_amount=order_total,
+            delivery_zone=zone,
+            delivery_fee=delivery_fee,
+            delivery_distance_km=zone.average_distance_km,
             status='pending',
         )
 
@@ -449,6 +466,7 @@ def checkout(request):
         'grand_total': grand_total,
         'customer':    customer,
         'cart_count':  cart_count,
+        'zones':       zones,
         'payment_choices': OnlineOrder.PAYMENT_CHOICES,
     }
     return render(request, 'ecommerce/checkout.html', context)

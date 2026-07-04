@@ -18,7 +18,18 @@
                     placeholder="Full delivery address">{{ customer.address }}</textarea>
             </div>
         </div>
-
+        <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; margin-bottom:1.5rem;">
+            <h3 style="font-weight:700; margin-bottom:1.25rem; font-size:1rem;">Delivery Zone</h3>
+            <div class="form-group">
+                <label>Select Your Zone *</label>
+                <select name="delivery_zone" required style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+                    <option value="">-- Choose a delivery zone --</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}">{{ zone.zone_name }} — Le {{ zone.base_fee }} + Le {{ zone.per_km_rate }}/km</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
         <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem;">
             <h3 style="font-weight:700; margin-bottom:1.25rem; font-size:1rem;">Payment Method</h3>
             {% for value, label in payment_choices %}

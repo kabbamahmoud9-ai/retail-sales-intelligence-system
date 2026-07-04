@@ -15,8 +15,10 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 import uuid
 
-from products.models import Product
+from products.models import Product, Category
 from sales.models import Sale, SaleItem
+from delivery.models import DeliveryZone
+from . import services
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +53,25 @@ class OnlineCustomer(models.Model):
     is_active       = models.BooleanField(default=True)
     created_at      = models.DateTimeField(auto_now_add=True)
 
+    # --- Customer intelligence (Step 11) --------------------------------
+    lifetime_spending = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0.00,
+        help_text="Cumulative total of all confirmed order amounts"
+    )
+    total_orders = models.PositiveIntegerField(default=0)
+    last_purchase_date = models.DateTimeField(null=True, blank=True)
+
+    preferred_categories = models.ManyToManyField(
+        Category, blank=True, related_name='preferred_by_customers',
+        help_text="System-computed top purchase categories, refreshed on each confirmed order"
+    )
+
+    trust_score = models.PositiveIntegerField(
+        default=50,
+        help_text="Rule-based trust score (0-100), auto-updated on each confirmed order. "
+                   "See ecommerce.services.calculate_trust_score()."
+    )
+
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Online Customer"
@@ -83,6 +104,53 @@ class OnlineCustomer(models.Model):
     def can_afford_credit(self, amount):
         """Return True if the customer has enough available credit."""
         return self.available_credit >= amount
+    # ------------------------------------------------------------------
+    # Customer intelligence (Step 11)
+    # ------------------------------------------------------------------
+
+    @property
+    def loyalty_tier(self):
+        """
+        Loyalty tier name, derived from lifetime_spending.
+
+        Delegates to services.calculate_loyalty_tier() rather than
+        computing thresholds inline, so tier logic can later factor in
+        purchase frequency, trust_score, or promotions without touching
+        this model.
+        """
+        return services.calculate_loyalty_tier(self)
+
+    def record_confirmed_order(self, order):
+        """
+        Called from OnlineOrder.confirm_order() right after an order is
+        confirmed. Updates all customer-intelligence stats in one place:
+
+          1. lifetime_spending / total_orders / last_purchase_date
+          2. preferred_categories (recomputed from full order history)
+          3. trust_score (recalculated via services.calculate_trust_score)
+
+        Kept as a single entry point so future AI features (Step 12/13)
+        have one place to trigger customer-stat refreshes from, rather
+        than duplicating this logic wherever an order gets confirmed.
+        """
+        self.lifetime_spending += order.total_amount
+        self.total_orders += 1
+        self.last_purchase_date = order.order_date
+
+        # Recompute preferred categories from full confirmed order history.
+        # Simple frequency-based top-3; refined ranking is future AI work.
+        category_ids = (
+            OnlineOrderItem.objects
+            .filter(order__customer=self, order__status__in=['confirmed', 'delivered'])
+            .values_list('product__category_id', flat=True)
+        )
+        from collections import Counter
+        top_category_ids = [cid for cid, _ in Counter(category_ids).most_common(3) if cid]
+        self.preferred_categories.set(top_category_ids)
+
+        self.trust_score = services.calculate_trust_score(self)
+
+        self.save()
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +200,39 @@ class OnlineOrder(models.Model):
 
     delivery_address = models.TextField()
     payment_method   = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
+
+    # --- Delivery costing (Step 11) -------------------------------------
+    DELIVERY_STATUS_CHOICES = [
+        ('assigned',   'Assigned'),
+        ('in_transit', 'In Transit'),
+        ('delivered',  'Delivered'),
+        ('failed',     'Failed'),
+    ]
+    DELIVERY_METHOD_CHOICES = [
+        ('own_rider',        'Own Rider'),
+        ('third_party',      'Third-Party Courier'),
+        ('customer_pickup',  'Customer Pickup'),
+    ]
+
+    delivery_zone = models.ForeignKey(
+        DeliveryZone, on_delete=models.PROTECT, null=True, blank=True,
+        related_name='orders',
+        help_text="Zone selected at checkout; determines delivery_fee"
+    )
+    # Snapshotted at checkout — same "freeze it" pattern as unit_price on
+    # OnlineOrderItem, so historical orders stay accurate if zone pricing
+    # changes later.
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    delivery_distance_km = models.DecimalField(
+        max_digits=6, decimal_places=2, default=0.00,
+        help_text="Distance used to calculate delivery_fee at checkout time"
+    )
+    delivery_status = models.CharField(
+        max_length=20, choices=DELIVERY_STATUS_CHOICES, blank=True,
+        help_text="Tracks the delivery leg specifically, independent of overall order status"
+    )
+    delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD_CHOICES, blank=True)
+    delivery_notes = models.TextField(blank=True)
 
     # Populated by simulate_payment() — architecture allows real API swap
     payment_reference = models.CharField(max_length=100, blank=True)
@@ -268,6 +369,11 @@ class OnlineOrder(models.Model):
         # --- 6. Mark confirmed ------------------------------------------
         self.status = 'confirmed'
         self.save()
+
+        # --- 7. Update customer intelligence (Step 11) -------------------
+        # Lifetime spending, order count, preferred categories, and trust
+        # score all refresh here so nothing else has to remember to do it.
+        self.customer.record_confirmed_order(self)
 
         return sale
 
