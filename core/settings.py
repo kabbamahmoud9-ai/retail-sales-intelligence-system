@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'notifications', 
     'forecasting',
     'advisor',
-    'dashboard',   
+    'dashboard', 
+    'ai_commerce',  
 ]   
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
