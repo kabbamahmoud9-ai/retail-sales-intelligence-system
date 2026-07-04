@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Customer Intelligence{% endblock %}
+{% block page_title %}Customer Intelligence{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Customer Intelligence</h1>
+        <p>Loyalty tier, trust score, and spending across all online customers</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:16px 20px;">
+    <form method="GET" style="display:flex; gap:10px;">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by name or email..."
+               style="flex:1; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+        <button type="submit" class="btn-primary-modern"><i class="bi bi-search"></i> Search</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Loyalty Tier</th>
+                    <th>Trust Score</th>
+                    <th>Lifetime Spending</th>
+                    <th>Total Orders</th>
+                    <th>Last Purchase</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td style="font-weight:600;">{{ customer.full_name }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>
+                        {% if customer.loyalty_tier == 'Platinum' %}
+                            <span class="badge-modern" style="background:#F3E8FF; color:#7C3AED;"><i class="bi bi-gem"></i> Platinum</span>
+                        {% elif customer.loyalty_tier == 'Gold' %}
+                            <span class="badge-modern badge-warning"><i class="bi bi-award-fill"></i> Gold</span>
+                        {% elif customer.loyalty_tier == 'Silver' %}
+                            <span class="badge-modern badge-info"><i class="bi bi-award"></i> Silver</span>
+                        {% else %}
+                            <span class="badge-modern" style="background:#FEF3E2; color:#B45309;"><i class="bi bi-award"></i> Bronze</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if customer.trust_score >= 70 %}
+                            <span class="badge-modern badge-success">{{ customer.trust_score }}</span>
+                        {% elif customer.trust_score >= 40 %}
+                            <span class="badge-modern badge-warning">{{ customer.trust_score }}</span>
+                        {% else %}
+                            <span class="badge-modern badge-danger">{{ customer.trust_score }}</span>
+                        {% endif %}
+                    </td>
+                    <td>Le {{ customer.lifetime_spending|floatformat:2 }}</td>
+                    <td>{{ customer.total_orders }}</td>
+                    <td>{{ customer.last_purchase_date|date:"M d, Y"|default:"—" }}</td>
+                    <td>
+                        <a href="{% url 'customer_intelligence_detail' customer.pk %}" class="btn-icon" title="View Profile">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <p>No online customers yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

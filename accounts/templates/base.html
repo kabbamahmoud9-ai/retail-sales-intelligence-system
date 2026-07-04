@@ -101,6 +101,11 @@
                     <i class="bi bi-signpost-split"></i> Delivery Zones
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="{% url 'delivery_order_list' %}" class="nav-link {% if 'delivery_order' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-truck"></i> Delivery Management
+                </a>
+            </div>
         </nav>
     </div>
 
@@ -118,6 +123,11 @@
             <div class="nav-item">
                 <a href="{% url 'advisor_list' %}" class="nav-link {% if 'advisor' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="bi bi-robot"></i> AI Advisor
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'customer_intelligence_list' %}" class="nav-link {% if 'customer_intelligence' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="bi bi-person-lines-fill"></i> Customer Intelligence
                 </a>
             </div>
             <div class="nav-item">

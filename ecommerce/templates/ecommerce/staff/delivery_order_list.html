@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Delivery Management{% endblock %}
+{% block page_title %}Delivery Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Delivery Management</h1>
+        <p>Update delivery status for confirmed orders</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:16px 20px;">
+    <form method="GET" style="display:flex; gap:10px; align-items:center;">
+        <label style="font-size:13px; color:var(--text-muted);">Filter by delivery status:</label>
+        <select name="delivery_status" onchange="this.form.submit()"
+                style="padding:0.5rem; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+            <option value="">All</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Order Ref</th>
+                    <th>Customer</th>
+                    <th>Zone</th>
+                    <th>Delivery Fee</th>
+                    <th>Delivery Status</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td style="font-weight:600;">{{ order.order_reference }}</td>
+                    <td>{{ order.customer.full_name }}</td>
+                    <td>{{ order.delivery_zone|default:"—" }}</td>
+                    <td>Le {{ order.delivery_fee|floatformat:2 }}</td>
+                    <td>
+                        {% if order.delivery_status == 'delivered' %}
+                            <span class="badge-modern badge-success"><i class="bi bi-check-circle-fill"></i> Delivered</span>
+                        {% elif order.delivery_status == 'in_transit' %}
+                            <span class="badge-modern badge-info"><i class="bi bi-truck"></i> In Transit</span>
+                        {% elif order.delivery_status == 'failed' %}
+                            <span class="badge-modern badge-danger"><i class="bi bi-x-circle-fill"></i> Failed</span>
+                        {% elif order.delivery_status == 'assigned' %}
+                            <span class="badge-modern badge-warning"><i class="bi bi-person-check-fill"></i> Assigned</span>
+                        {% else %}
+                            <span class="badge-modern" style="background:#F3F4F6; color:#6B7280;">Not Set</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'delivery_order_update' order.pk %}" style="display:flex; gap:6px;">
+                            {% csrf_token %}
+                            <select name="delivery_status" style="padding:0.4rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:12px;">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.delivery_status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-icon" title="Update Status">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">
+                    <div class="empty-state">
+                        <i class="bi bi-truck"></i>
+                        <p>No confirmed orders to manage yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -14,6 +14,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('advisor/', include('advisor.urls')),
     path('store/', include('ecommerce.urls')),
+    path('', include('ecommerce.staff_urls')),
     path('delivery/', include('delivery.urls')),
     path('', include('dashboard.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
