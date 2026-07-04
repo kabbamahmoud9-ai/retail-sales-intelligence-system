@@ -26,6 +26,8 @@ DeliveryZone.calculate_fee() being the sole seam for a future mapping API.
 
 import difflib
 import re
+from collections import Counter
+from decimal import Decimal
 
 import nltk
 from django.db.models import Avg, Q
@@ -35,7 +37,8 @@ from nltk.tokenize import word_tokenize
 
 from products.models import Category, Product
 
-from .models import ShoppingRecommendation
+from ecommerce.models import OnlineOrderItem
+from .models import CreditAssessment, ShoppingRecommendation
 
 ASSISTANT_VERSION = "v1-rule-based"
 MAX_CANDIDATES = 25   # keeps candidate scoring bounded
@@ -355,3 +358,128 @@ def generate_shopping_recommendations(session):
             )
         )
     return created
+# ---------------------------------------------------------------------------
+# Smart Credit & Loyalty Assistant (Step 12c)
+# ---------------------------------------------------------------------------
+
+# Base recommended limit per loyalty tier, before the trust-score
+# multiplier is applied. Named constants, not scattered magic numbers —
+# same convention as ecommerce.services.LOYALTY_TIER_THRESHOLDS.
+CREDIT_TIER_BASE_LIMITS = {
+    'Bronze': Decimal('500.00'),
+    'Silver': Decimal('2000.00'),
+    'Gold': Decimal('5000.00'),
+    'Platinum': Decimal('10000.00'),
+}
+
+
+def calculate_credit_recommendation(customer):
+    """
+    Rule-based v1 Smart Credit Assistant. Encapsulated here so it can be
+    replaced by an ML model later without changing any caller — same
+    extensibility philosophy as ecommerce.services.calculate_trust_score().
+
+    Formula:
+      1. Start from a base limit for the customer's current loyalty_tier
+      2. Scale it by a trust-score multiplier (0.5x at trust_score=0, up
+         to 1.5x at trust_score=100)
+      3. Compare the recommended limit and credit utilization
+         (credit_balance / credit_limit) against thresholds to decide
+         eligibility_status
+
+    Persists and returns a new CreditAssessment row (append-only — full
+    history retained for future accuracy review, same philosophy as
+    DemandForecast/ShoppingRecommendation). This function only ever
+    recommends; OnlineCustomer.credit_limit is never written here.
+    """
+    tier = customer.loyalty_tier
+    base_limit = CREDIT_TIER_BASE_LIMITS.get(tier, CREDIT_TIER_BASE_LIMITS['Bronze'])
+
+    trust_multiplier = Decimal('0.5') + (Decimal(customer.trust_score) / Decimal('100'))
+    recommended_limit = (base_limit * trust_multiplier).quantize(Decimal('0.01'))
+
+    utilization = (
+        customer.credit_balance / customer.credit_limit
+        if customer.credit_limit > 0 else Decimal('0.00')
+    )
+
+    if customer.trust_score < 40 or utilization > Decimal('0.8'):
+        eligibility_status = 'review_needed'
+        reasoning = (
+            f"Trust score ({customer.trust_score}) or credit utilization "
+            f"({utilization:.0%}) indicates a manual review is warranted "
+            f"before adjusting this customer's limit."
+        )
+    elif (
+        customer.trust_score >= 70
+        and utilization <= Decimal('0.3')
+        and recommended_limit > customer.credit_limit
+    ):
+        eligibility_status = 'eligible_increase'
+        reasoning = (
+            f"Strong trust score ({customer.trust_score}), low utilization "
+            f"({utilization:.0%}), and {tier} loyalty tier support increasing "
+            f"the credit limit to Le {recommended_limit}."
+        )
+    else:
+        eligibility_status = 'maintain'
+        reasoning = (
+            f"Current trust score ({customer.trust_score}), utilization "
+            f"({utilization:.0%}), and {tier} tier support keeping the "
+            f"existing credit limit as-is for now."
+        )
+
+    return CreditAssessment.objects.create(
+        customer=customer,
+        trust_score_snapshot=customer.trust_score,
+        loyalty_tier_snapshot=tier,
+        lifetime_spending_snapshot=customer.lifetime_spending,
+        outstanding_balance_snapshot=customer.credit_balance,
+        recommended_credit_limit=recommended_limit,
+        eligibility_status=eligibility_status,
+        reasoning=reasoning,
+        assistant_version=ASSISTANT_VERSION,
+    )
+
+
+def get_reorder_suggestions(customer, limit=5):
+    """
+    Returns the customer's most frequently purchased products, most-bought
+    first, for the "reorder previous purchases" feature. Only suggests
+    products still active and available online.
+
+    Pure read/aggregation against existing order history — no new model,
+    no AI involved (this is fact retrieval, not a recommendation call).
+
+    Returns a list of dicts:
+        [{"product": Product, "times_ordered": int, "last_ordered": datetime}, ...]
+    """
+    items = (
+        OnlineOrderItem.objects
+        .filter(
+            order__customer=customer,
+            order__status__in=['confirmed', 'processing', 'shipped', 'delivered'],
+            product__is_active=True,
+            product__is_available_online=True,
+        )
+        .select_related('product', 'order')
+    )
+
+    counts = Counter()
+    last_ordered = {}
+    products_by_id = {}
+    for item in items:
+        counts[item.product_id] += 1
+        products_by_id[item.product_id] = item.product
+        if item.product_id not in last_ordered or item.order.order_date > last_ordered[item.product_id]:
+            last_ordered[item.product_id] = item.order.order_date
+
+    ranked = counts.most_common(limit)
+    return [
+        {
+            "product": products_by_id[product_id],
+            "times_ordered": count,
+            "last_ordered": last_ordered[product_id],
+        }
+        for product_id, count in ranked
+    ]
