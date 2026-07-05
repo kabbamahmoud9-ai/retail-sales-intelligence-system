@@ -1,0 +1,29 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}AI Shopping Assistant{% endblock %}
+{% block content %}
+<h2 style="font-size:1.4rem; font-weight:700; margin-bottom:0.5rem;">AI Shopping Assistant</h2>
+<p style="color:var(--text-muted); margin-bottom:1.5rem;">Choose how you'd like to shop today.</p>
+<div class="product-grid">
+    <div class="product-card">
+        <div class="product-card-body">
+            <div class="product-card-title">💬 Tell us what you need</div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);">Describe your shopping needs in your own words.</p>
+            <a href="{% url 'ai_commerce:natural_language' %}" class="btn-primary-modern" style="display:block;text-align:center;padding:0.6rem;margin-top:0.75rem;text-decoration:none;">Start</a>
+        </div>
+    </div>
+    <div class="product-card">
+        <div class="product-card-body">
+            <div class="product-card-title">🧭 Guided Shopping Planner</div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);">Answer a few quick questions and we'll build a basket for you.</p>
+            <a href="{% url 'ai_commerce:guided_planner' %}" class="btn-primary-modern" style="display:block;text-align:center;padding:0.6rem;margin-top:0.75rem;text-decoration:none;">Start</a>
+        </div>
+    </div>
+    <div class="product-card">
+        <div class="product-card-body">
+            <div class="product-card-title">🎯 Shop by Goal</div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);">Pick a goal — Weekly Groceries, Party Shopping, and more.</p>
+            <a href="{% url 'ai_commerce:shop_by_goal' %}" class="btn-primary-modern" style="display:block;text-align:center;padding:0.6rem;margin-top:0.75rem;text-decoration:none;">Start</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

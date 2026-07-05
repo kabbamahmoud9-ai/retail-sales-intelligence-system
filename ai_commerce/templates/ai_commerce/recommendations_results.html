@@ -1,0 +1,66 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Your Recommendations{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.4rem; font-weight:700;">Your Personalized Recommendations</h2>
+    <p style="color:var(--text-muted); font-size:0.9rem;">
+        Based on your {{ session.get_mode_display }} request{% if session.raw_query %}: "{{ session.raw_query }}"{% endif %}
+    </p>
+</div>
+
+{% if recommendations %}
+<form method="post" action="{% url 'ai_commerce:add_all_to_cart' session.id %}">
+    {% csrf_token %}
+    <div class="product-grid">
+        {% for rec in recommendations %}
+        <div class="product-card">
+            {% if rec.product.product_image %}
+                <img src="{{ rec.product.product_image.url }}" alt="{{ rec.product.product_name }}">
+            {% else %}
+                <div class="product-card-placeholder">📦</div>
+            {% endif %}
+            <div class="product-card-body">
+                <div class="product-card-title">{{ rec.product.product_name }}</div>
+                <div class="product-card-category">{{ rec.product.category.category_name|default:"—" }}</div>
+                <div class="product-card-price">Le {{ rec.product.online_price|floatformat:2 }}</div>
+                <p style="font-size:0.82rem; color:var(--text-secondary); margin:0 0 0.5rem;">{{ rec.reasoning }}</p>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                    Match confidence: {% widthratio rec.confidence_score 1 100 %}%
+                </div>
+                <div class="form-group" style="margin-bottom:0.5rem;">
+                    <label style="font-size:0.78rem;">Quantity</label>
+                    <input type="number" name="quantity_{{ rec.product.id }}" value="1" min="0" max="{{ rec.product.quantity_in_stock }}">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="margin-top:1.5rem;">
+        <button type="submit" class="btn-primary-modern" style="padding:0.75rem 2rem;">Add All to Cart</button>
+    </div>
+</form>
+
+<div style="margin-top:2rem;">
+    <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">Was this helpful?</h3>
+    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+        {% for rec in recommendations %}
+        <div style="font-size:0.85rem;">
+            {{ rec.product.product_name }}:
+            <form method="post" action="{% url 'ai_commerce:recommendation_feedback' rec.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" name="helpful" value="yes" style="border:none;background:none;cursor:pointer;">👍</button>
+                <button type="submit" name="helpful" value="no" style="border:none;background:none;cursor:pointer;">👎</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<div style="text-align:center; padding:4rem 2rem; color:var(--text-muted);">
+    <div style="font-size:3rem; margin-bottom:1rem;">🤔</div>
+    <p style="font-size:1.1rem;">We couldn't find any matching products right now.</p>
+    <p>Try a different request, or <a href="{% url 'ecommerce:store_home' %}">browse the full catalogue</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

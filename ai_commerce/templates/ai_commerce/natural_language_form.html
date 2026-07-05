@@ -1,0 +1,20 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Tell Us What You Need{% endblock %}
+{% block content %}
+<div class="auth-card">
+    <h2>Tell us what you need</h2>
+    <p class="subtitle">Describe your shopping request in plain language.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>What are you shopping for?</label>
+            <textarea name="raw_query" rows="4" placeholder="e.g. I need snacks and cold drinks for a small party" required>{{ raw_query|default:"" }}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Budget (optional, in Le)</label>
+            <input type="number" name="budget" step="0.01" min="0" placeholder="e.g. 100">
+        </div>
+        <button type="submit" class="btn-primary-modern" style="width:100%;padding:0.7rem;">Get Recommendations</button>
+    </form>
+</div>
+{% endblock %}

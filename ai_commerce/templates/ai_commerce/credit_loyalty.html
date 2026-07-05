@@ -1,0 +1,52 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Credit & Loyalty{% endblock %}
+{% block content %}
+<h2 style="font-size:1.4rem;font-weight:700;margin-bottom:0.25rem;">Your Credit & Loyalty Status</h2>
+<p style="color:var(--text-muted);margin-bottom:1.5rem;">
+    Loyalty tier: <strong>{{ customer.loyalty_tier }}</strong> · Trust score: <strong>{{ customer.trust_score }}/100</strong>
+</p>
+
+<div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-header">Credit Recommendation</div>
+    <div class="checkout-card-body">
+        <p><strong>Current limit:</strong> Le {{ customer.credit_limit|floatformat:2 }}</p>
+        <p><strong>Available credit:</strong> Le {{ customer.available_credit|floatformat:2 }}</p>
+        <p><strong>Recommended limit:</strong> Le {{ assessment.recommended_credit_limit|floatformat:2 }}</p>
+        <p><strong>Status:</strong> {{ assessment.get_eligibility_status_display }}</p>
+        <p style="color:var(--text-secondary);font-size:0.9rem;">{{ assessment.reasoning }}</p>
+    </div>
+</div>
+
+<div class="checkout-card">
+    <div class="checkout-card-header">Reorder Your Favorites</div>
+    <div class="checkout-card-body">
+        {% if reorder_suggestions %}
+        <div class="product-grid">
+            {% for item in reorder_suggestions %}
+            <div class="product-card">
+                {% if item.product.product_image %}
+                    <img src="{{ item.product.product_image.url }}" alt="{{ item.product.product_name }}">
+                {% else %}
+                    <div class="product-card-placeholder">📦</div>
+                {% endif %}
+                <div class="product-card-body">
+                    <div class="product-card-title">{{ item.product.product_name }}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">
+                        Ordered {{ item.times_ordered }} time{{ item.times_ordered|pluralize }}
+                    </div>
+                    <div class="product-card-price">Le {{ item.product.online_price|floatformat:2 }}</div>
+                    <form method="post" action="{% url 'ecommerce:add_to_cart' item.product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-primary-modern" style="width:100%;padding:0.5rem;">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--text-muted);">No previous purchases yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

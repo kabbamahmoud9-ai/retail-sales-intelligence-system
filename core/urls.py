@@ -17,4 +17,5 @@ urlpatterns = [
     path('', include('ecommerce.staff_urls')),
     path('delivery/', include('delivery.urls')),
     path('', include('dashboard.urls')),
+    path('store/assistant/', include('ai_commerce.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

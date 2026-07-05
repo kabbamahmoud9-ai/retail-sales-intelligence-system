@@ -1,0 +1,21 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Shop by Goal{% endblock %}
+{% block content %}
+<div class="auth-card" style="max-width:520px;">
+    <h2>Shop by Goal</h2>
+    <p class="subtitle">Pick what you're shopping for today.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Goal</label>
+            <select name="goal" required>
+                <option value="">-- Select a goal --</option>
+                {% for value, label in goal_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-primary-modern" style="width:100%;padding:0.7rem;">Get Recommendations</button>
+    </form>
+</div>
+{% endblock %}

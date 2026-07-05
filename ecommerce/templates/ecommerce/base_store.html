@@ -452,6 +452,8 @@ body {
         </a>
         {% if customer %}
             <a href="{% url 'ecommerce:order_history' %}">My Orders</a>
+            <a href="{% url 'ai_commerce:home' %}">AI Assistant</a>
+            <a href="{% url 'ai_commerce:credit_loyalty' %}">Credit & Loyalty</a>
             <a href="{% url 'ecommerce:logout' %}">Logout</a>
             <span style="color: var(--text-muted); font-size:0.85rem;">Hi, {{ customer.full_name|truncatechars:15 }}</span>
         {% else %}
