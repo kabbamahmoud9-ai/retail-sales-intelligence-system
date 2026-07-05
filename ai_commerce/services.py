@@ -43,6 +43,11 @@ from .models import CreditAssessment, ShoppingRecommendation
 ASSISTANT_VERSION = "v1-rule-based"
 MAX_CANDIDATES = 25   # keeps candidate scoring bounded
 MAX_RECOMMENDATIONS = 8  # size of the basket shown to the customer
+MAX_PER_CATEGORY = 3  # prevents one category with many tied-score items
+                       # from crowding out a genuinely relevant but
+                       # lower-scoring match from a different category
+                       # (e.g. a single keyword-matched "chicken" item
+                       # getting squeezed out by many "Cooking Oil" items)
 
 _LEMMATIZER = WordNetLemmatizer()
 
@@ -126,7 +131,8 @@ def parse_natural_language_query(raw_query):
         }
     """
     lemmas = _tokenize_and_lemmatize(raw_query)
-    categories = _match_categories(lemmas)
+    categories = set(_match_categories(lemmas))
+    categories.update(_detect_dish_categories(raw_query))
     price_sensitivity = _detect_price_sensitivity(lemmas)
 
     # Keywords = lemmas that aren't just category names or price-signal words,
@@ -135,7 +141,7 @@ def parse_natural_language_query(raw_query):
     keywords = [l for l in lemmas if l not in signal_words]
 
     return {
-        "categories": categories,
+        "categories": list(categories),
         "keywords": keywords,
         "price_sensitivity": price_sensitivity,
     }
@@ -148,6 +154,34 @@ _GOAL_KEYWORD_MAP = {
     # 'save_money' and 'premium_quality' are handled via quality_preference
     # (or the derived price_sensitivity for NL mode) instead of keywords.
 }
+
+_DISH_KEYWORD_CATEGORY_MAP = {
+    'jollof rice': ['Rice & Grains', 'Cooking Oil', 'Canned Foods', 'Spices & Seasonings'],
+    'fried rice': ['Rice & Grains', 'Cooking Oil', 'Frozen Foods', 'Spices & Seasonings', 'Fresh Produce'],
+    'salad': ['Fresh Produce', 'Cooking Oil'],
+    'breakfast': ['Bread & Bakery', 'Dairy Products', 'Tea & Coffee', 'Beverages'],
+    'party': ['Water & Soft Drinks', 'Beverages', 'Biscuits & Snacks', 'Confectionery'],
+}
+
+
+def _detect_dish_categories(raw_query):
+    """
+    Detects mentions of common local dishes/occasions in the raw query and
+    maps them to the categories that supply their ingredients. This bridges
+    the gap between a dish name (not itself a category or literal product
+    keyword) and the actual catalog structure — e.g. "jollof rice" implies
+    Rice & Grains + Cooking Oil + Spices, even though none of those words
+    appear verbatim in "jollof rice". Deliberately simple substring
+    matching on the full phrase, not per-token — same rule-based
+    philosophy as the rest of this module, easily extended with more
+    dishes as the catalog grows.
+    """
+    query_lower = raw_query.lower()
+    matched_categories = set()
+    for phrase, categories in _DISH_KEYWORD_CATEGORY_MAP.items():
+        if phrase in query_lower:
+            matched_categories.update(categories)
+    return list(matched_categories)
 
 
 def _apply_quality_tier_filter(queryset, quality_preference):
@@ -210,23 +244,30 @@ def get_candidate_products(session):
     elif session.mode == 'shop_by_goal':
         keywords = _GOAL_KEYWORD_MAP.get(session.goal, [])
 
-    if categories:
-        queryset = queryset.filter(category__category_name__in=categories)
+    # Category and keyword matches combine as OR, not AND — a request like
+    # "fried rice and chicken" should surface BOTH Rice & Grains category
+    # products AND keyword-matched chicken products (in a different
+    # category), not exclude one because of the other. Keyword matching
+    # only checks product_name/description — NOT category_name — since
+    # matching a keyword against the category's own label caused false
+    # positives (e.g. "rice" matching the text "Rice & Grains" for every
+    # product in that category, including unrelated ones like Garri).
+    category_matches = (
+        queryset.filter(category__category_name__in=categories) if categories else queryset.none()
+    )
 
-    if keywords:
-        keyword_query = Q()
-        for word in keywords:
-            keyword_query |= (
-                Q(product_name__icontains=word)
-                | Q(description__icontains=word)
-                | Q(category__category_name__icontains=word)
-            )
-        keyword_filtered = queryset.filter(keyword_query)
-        # Soft filter: if strict keyword matching excludes everything,
-        # fall back to the unfiltered (category/quality-only) queryset
+    keyword_query = Q()
+    for word in keywords:
+        keyword_query |= Q(product_name__icontains=word) | Q(description__icontains=word)
+    keyword_matches = queryset.filter(keyword_query) if keywords else queryset.none()
+
+    if categories or keywords:
+        combined = (category_matches | keyword_matches).distinct()
+        # Soft fallback: if neither signal matched anything real, fall
+        # through to the full (quality-tier-filtered) queryset below,
         # rather than returning nothing.
-        if keyword_filtered.exists():
-            queryset = keyword_filtered
+        if combined.exists():
+            queryset = combined
 
     quality_preference = _effective_quality_preference(session)
     if quality_preference:
@@ -317,7 +358,39 @@ def _rank_and_explain(session, candidates):
         for product in candidates
     ]
     scored.sort(key=lambda item: item[1], reverse=True)
-    return scored[:MAX_RECOMMENDATIONS]
+    return _diversify_by_category(scored)
+
+
+def _diversify_by_category(scored):
+    """
+    Selects the final basket from the score-sorted candidate list, capping
+    how many items any single category contributes (MAX_PER_CATEGORY).
+    This ensures a multi-need request (e.g. salad ingredients + chicken)
+    surfaces items across all genuinely matched categories/keywords,
+    rather than one category with many similarly-scored products
+    dominating every slot. Falls back to filling remaining slots from
+    whatever's left over, still in score order, if the cap leaves room.
+    """
+    selected = []
+    leftover = []
+    category_counts = Counter()
+
+    for product, score, reasoning in scored:
+        if len(selected) >= MAX_RECOMMENDATIONS:
+            break
+        category_name = product.category.category_name if product.category else 'Uncategorized'
+        if category_counts[category_name] < MAX_PER_CATEGORY:
+            selected.append((product, score, reasoning))
+            category_counts[category_name] += 1
+        else:
+            leftover.append((product, score, reasoning))
+
+    for item in leftover:
+        if len(selected) >= MAX_RECOMMENDATIONS:
+            break
+        selected.append(item)
+
+    return selected
 
 
 def generate_shopping_recommendations(session):

@@ -56,6 +56,7 @@ CATEGORIES = [
     "Stationery",
     "Health & Wellness",
     "Confectionery",
+    "Fresh Produce",
 ]
 
 # ---------------------------------------------------------------------------
@@ -117,6 +118,12 @@ SUPPLIERS = [
         "email": "info@fnstationery.sl",
         "address": "14 Rawdon St, Freetown",
     },
+    {
+        "supplier_name": "Fresh Produce Farmers Cooperative",
+        "phone": "+232 76 100 010",
+        "email": "coop@freshproduce.sl",
+        "address": "Waterloo Farmers Market, Freetown",
+    },
 ]
 
 # Maps each category to the supplier that stocks it
@@ -142,6 +149,7 @@ CATEGORY_SUPPLIER_MAP = {
     "Cleaning Supplies": "CleanHome Household Supplies Ltd",
     "Household Essentials": "CleanHome Household Supplies Ltd",
     "Stationery": "Freetown Stationery & Office Supplies",
+    "Fresh Produce": "Fresh Produce Farmers Cooperative",
 }
 
 # ---------------------------------------------------------------------------
@@ -298,6 +306,16 @@ PRODUCTS_BY_CATEGORY = {
         ("Chewing Gum Pack of 10", "Mint chewing gum, pack of 10.", 6.00, 8.00, 70, 18, True),
         ("Lollipops Pack of 20", "Assorted fruit lollipops, pack of 20.", 8.00, 10.00, 50, 12, True),
         ("Marshmallows 200g", "Soft vanilla marshmallows, 200g pack.", 10.00, 12.00, 35, 10, True),
+    ],
+    "Fresh Produce": [
+        ("Fresh Tomatoes 1kg", "Ripe fresh tomatoes, 1kg.", 12.00, 15.00, 60, 15, True),
+        ("Onions 1kg", "Fresh red onions, 1kg.", 10.00, 12.00, 70, 18, True),
+        ("Cucumber (Each)", "Fresh garden cucumber, sold each.", 3.00, 4.00, 50, 15, True),
+        ("Lettuce Head (Each)", "Fresh lettuce head, sold each.", 6.00, 8.00, 40, 12, True),
+        ("Green Bell Peppers 500g", "Fresh green bell peppers, 500g.", 14.00, 17.00, 45, 12, True),
+        ("Garden Eggs 1kg", "Fresh local garden eggs, 1kg.", 9.00, 11.00, 55, 15, True),
+        ("Carrots 500g", "Fresh carrots, 500g.", 8.00, 10.00, 50, 12, True),
+        ("Cabbage Head (Each)", "Fresh cabbage head, sold each.", 7.00, 9.00, 40, 10, True),
     ],
 }
 
