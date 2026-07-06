@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'forecasting',
     'advisor',
     'dashboard', 
-    'ai_commerce',  
+    'ai_commerce',
+    'voice_assistant',  
 ]   
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -75,6 +76,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "voice_assistant.context_processors.voice_language_settings",
             ],
         },
     },

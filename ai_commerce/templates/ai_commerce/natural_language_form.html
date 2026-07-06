@@ -1,14 +1,19 @@
 {% extends 'ecommerce/base_store.html' %}
+{% load static %}
 {% block title %}Tell Us What You Need{% endblock %}
 {% block content %}
 <div class="auth-card">
     <h2>Tell us what you need</h2>
-    <p class="subtitle">Describe your shopping request in plain language.</p>
-    <form method="post">
+    <p class="subtitle">Describe your shopping request in plain language, or tap the microphone to speak it.</p>
+    <form method="post" id="natural-language-form">
         {% csrf_token %}
         <div class="form-group">
             <label>What are you shopping for?</label>
-            <textarea name="raw_query" rows="4" placeholder="e.g. I need snacks and cold drinks for a small party" required>{{ raw_query|default:"" }}</textarea>
+            <div style="display:flex; gap:0.5rem; align-items:flex-start;">
+                <textarea name="raw_query" id="raw-query-input" rows="4" placeholder="e.g. I need snacks and cold drinks for a small party" required>{{ raw_query|default:"" }}</textarea>
+                <button type="button" id="voice-mic-btn" class="btn-primary-modern" style="padding:0.6rem 0.9rem;" title="Speak your request">🎤</button>
+            </div>
+            <p id="voice-status" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;"></p>
         </div>
         <div class="form-group">
             <label>Budget (optional, in Le)</label>
@@ -17,4 +22,48 @@
         <button type="submit" class="btn-primary-modern" style="width:100%;padding:0.7rem;">Get Recommendations</button>
     </form>
 </div>
+
+<script src="{% static 'js/voice_assistant.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var micBtn = document.getElementById('voice-mic-btn');
+    var input = document.getElementById('raw-query-input');
+    var status = document.getElementById('voice-status');
+    var form = document.getElementById('natural-language-form');
+
+    if (typeof VoiceAssistant === 'undefined') return;
+
+    var assistant = new VoiceAssistant({
+        recognitionLanguage: '{{ voice_recognition_language }}',
+        responseLanguage: '{{ voice_response_language }}'
+    });
+
+    if (!assistant.recognitionSupported) {
+        micBtn.disabled = true;
+        micBtn.title = 'Voice input is not supported in this browser';
+        return;
+    }
+
+    micBtn.addEventListener('click', function () {
+        status.textContent = 'Listening...';
+        assistant.startListening(
+            function (transcript) {
+                input.value = transcript;
+                status.textContent = 'Heard: "' + transcript + '"';
+                form.submit();
+            },
+            function (error) {
+                console.error('Speech recognition error:', error);
+                var friendlyMessages = {
+                    'network': "Connection to the speech service was interrupted — this can happen with longer sentences. Try again with a shorter phrase, or type your request instead.",
+                    'no-speech': "I didn't hear anything. Please try again and speak right after tapping the microphone.",
+                    'audio-capture': "No microphone was detected. Please check your microphone and try again.",
+                    'not-allowed': "Microphone access was blocked. Please allow microphone permission and try again."
+                };
+                status.textContent = friendlyMessages[error] || "Sorry, I didn't catch that. Please try again or type your request.";
+            }
+        );
+    });
+});
+</script>
 {% endblock %}

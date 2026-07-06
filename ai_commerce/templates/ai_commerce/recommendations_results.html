@@ -1,4 +1,5 @@
 {% extends 'ecommerce/base_store.html' %}
+{% load static %}
 {% block title %}Your Recommendations{% endblock %}
 {% block content %}
 <div style="margin-bottom:1.5rem;">
@@ -9,6 +10,9 @@
 </div>
 
 {% if recommendations %}
+<button type="button" id="read-aloud-btn" class="btn-primary-modern" style="padding:0.5rem 1.25rem; margin-bottom:1rem;">🔊 Read Results Aloud</button>
+<p id="read-aloud-status" style="font-size:0.8rem; color:var(--text-muted);"></p>
+
 <form method="post" action="{% url 'ai_commerce:add_all_to_cart' session.id %}">
     {% csrf_token %}
     <div class="product-grid">
@@ -63,4 +67,37 @@
     <p>Try a different request, or <a href="{% url 'ecommerce:store_home' %}">browse the full catalogue</a>.</p>
 </div>
 {% endif %}
+
+<script src="{% static 'js/voice_assistant.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('read-aloud-btn');
+    var status = document.getElementById('read-aloud-status');
+    if (!btn || typeof VoiceAssistant === 'undefined') return;
+
+    var assistant = new VoiceAssistant({
+        recognitionLanguage: '{{ voice_recognition_language }}',
+        responseLanguage: '{{ voice_response_language }}'
+    });
+
+    btn.addEventListener('click', function () {
+        status.textContent = 'Fetching narration...';
+        fetch("{% url 'voice_assistant:read_recommendations_aloud' session.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            status.textContent = '';
+            assistant.speak(data.spoken_text);
+        })
+        .catch(function () {
+            status.textContent = 'Sorry, something went wrong reading the results aloud.';
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -18,4 +18,5 @@ urlpatterns = [
     path('delivery/', include('delivery.urls')),
     path('', include('dashboard.urls')),
     path('store/assistant/', include('ai_commerce.urls')),
+    path('store/voice/', include('voice_assistant.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
