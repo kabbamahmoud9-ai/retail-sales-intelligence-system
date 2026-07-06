@@ -80,3 +80,55 @@ def narrate_shopping_recommendations(session, recommendations):
 
     parts.append(random.choice(_CLOSINGS))
     return " ".join(parts)
+def narrate_credit_status(customer, assessment, reorder_suggestions):
+    """
+    Builds a short, conversational spoken summary of a customer's
+    already-persisted CreditAssessment plus their reorder suggestions.
+    Reads only — never recalculates credit eligibility or trust score.
+    """
+    if assessment is None:
+        return (
+            "I don't have a credit assessment on file for you yet. "
+            "Check back after your next visit to this page."
+        )
+
+    parts = []
+
+    parts.append(
+        f"You're currently a {customer.loyalty_tier} member with a trust score "
+        f"of {customer.trust_score} out of 100."
+    )
+
+    parts.append(
+        f"Your current credit limit is {customer.credit_limit:,.0f} leones, "
+        f"with {customer.available_credit:,.0f} leones available right now."
+    )
+
+    status_phrases = {
+        'eligible_increase': (
+            f"Good news — you're eligible for a credit increase, up to "
+            f"about {assessment.recommended_credit_limit:,.0f} leones."
+        ),
+        'maintain': (
+            f"Your current limit looks like a good fit for now, "
+            f"around {assessment.recommended_credit_limit:,.0f} leones."
+        ),
+        'review_needed': (
+            "Your account could use a closer look before any credit changes are made."
+        ),
+    }
+    parts.append(
+        status_phrases.get(
+            assessment.eligibility_status,
+            "Here's where things stand with your credit."
+        )
+    )
+
+    if reorder_suggestions:
+        top_reorder = list(reorder_suggestions)[:2]
+        names = " and ".join(item['product'].product_name for item in top_reorder)
+        parts.append(f"Based on your past orders, you might want to reorder {names}.")
+
+    parts.append("Let me know if you'd like to hear more, or head back to shopping.")
+
+    return " ".join(parts)

@@ -17,4 +17,9 @@ urlpatterns = [
         views.read_recommendations_aloud,
         name='read_recommendations_aloud',
     ),
+    path(
+        'credit-loyalty/read-aloud/',
+        views.read_credit_status_aloud,
+        name='read_credit_status_aloud',
+    ),
 ]

@@ -1,10 +1,14 @@
 {% extends 'ecommerce/base_store.html' %}
+{% load static %}
 {% block title %}Credit & Loyalty{% endblock %}
 {% block content %}
 <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:0.25rem;">Your Credit & Loyalty Status</h2>
 <p style="color:var(--text-muted);margin-bottom:1.5rem;">
     Loyalty tier: <strong>{{ customer.loyalty_tier }}</strong> · Trust score: <strong>{{ customer.trust_score }}/100</strong>
 </p>
+
+<button type="button" id="read-credit-status-btn" class="btn-primary-modern" style="padding:0.5rem 1.25rem; margin-bottom:1rem;">🔊 Read My Status Aloud</button>
+<p id="read-credit-status-status" style="font-size:0.8rem; color:var(--text-muted);"></p>
 
 <div class="checkout-card" style="margin-bottom:1.5rem;">
     <div class="checkout-card-header">Credit Recommendation</div>
@@ -49,4 +53,37 @@
         {% endif %}
     </div>
 </div>
+
+<script src="{% static 'js/voice_assistant.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('read-credit-status-btn');
+    var status = document.getElementById('read-credit-status-status');
+    if (!btn || typeof VoiceAssistant === 'undefined') return;
+
+    var assistant = new VoiceAssistant({
+        recognitionLanguage: '{{ voice_recognition_language }}',
+        responseLanguage: '{{ voice_response_language }}'
+    });
+
+    btn.addEventListener('click', function () {
+        status.textContent = 'Fetching your status...';
+        fetch("{% url 'voice_assistant:read_credit_status_aloud' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            status.textContent = '';
+            assistant.speak(data.spoken_text);
+        })
+        .catch(function () {
+            status.textContent = 'Sorry, something went wrong reading your status aloud.';
+        });
+    });
+});
+</script>
 {% endblock %}
