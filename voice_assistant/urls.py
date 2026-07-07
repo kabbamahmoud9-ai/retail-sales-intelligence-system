@@ -22,4 +22,9 @@ urlpatterns = [
         views.read_credit_status_aloud,
         name='read_credit_status_aloud',
     ),
+    path(
+        'advisor/read-aloud/',
+        views.read_advisor_recap_aloud,
+        name='read_advisor_recap_aloud',
+    ),
 ]

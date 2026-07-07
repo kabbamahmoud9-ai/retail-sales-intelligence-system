@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}AI Advisor{% endblock %}
 {% block page_title %}AI Advisor{% endblock %}
 
@@ -8,6 +9,11 @@
         <h1>AI Business Advisor</h1>
         <p>Recommendations generated from demand forecasts, stock levels, and unmet customer requests</p>
     </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:12px 16px;">
+    <button type="button" id="read-advisor-recap-btn" class="btn-primary-modern" style="padding:6px 16px; font-size:13px;">🔊 Hear Today's Recap</button>
+    <span id="read-advisor-recap-status" style="font-size:13px; color:var(--text-muted); margin-left:8px;"></span>
 </div>
 
 <!-- Priority Filter Tabs -->
@@ -116,4 +122,37 @@
     </div>
     {% endif %}
 </div>
+
+<script src="{% static 'js/voice_assistant.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('read-advisor-recap-btn');
+    var status = document.getElementById('read-advisor-recap-status');
+    if (!btn || typeof VoiceAssistant === 'undefined') return;
+
+    var assistant = new VoiceAssistant({
+        recognitionLanguage: '{{ voice_recognition_language }}',
+        responseLanguage: '{{ voice_response_language }}'
+    });
+
+    btn.addEventListener('click', function () {
+        status.textContent = 'Preparing recap...';
+        fetch("{% url 'voice_assistant:read_advisor_recap_aloud' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            status.textContent = '';
+            assistant.speak(data.spoken_text);
+        })
+        .catch(function () {
+            status.textContent = 'Sorry, something went wrong preparing the recap.';
+        });
+    });
+});
+</script>
 {% endblock %}

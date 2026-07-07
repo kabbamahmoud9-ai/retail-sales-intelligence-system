@@ -9,6 +9,8 @@ No business logic is duplicated or reimplemented here.
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from advisor.models import Recommendation
 
 from ecommerce.views import get_current_customer, customer_login_required
 from ai_commerce.models import ShoppingSession
@@ -18,7 +20,7 @@ from ai_commerce.services import get_reorder_suggestions
 
 from .config import VOICE_RECOGNITION_LANGUAGE, VOICE_RESPONSE_LANGUAGE
 from .language import format_for_speech
-from .narration import narrate_shopping_recommendations, narrate_credit_status
+from .narration import narrate_shopping_recommendations, narrate_credit_status, narrate_advisor_recap
 from .models import VoiceInteraction
 
 
@@ -72,6 +74,36 @@ def read_credit_status_aloud(request):
         recognition_language=VOICE_RECOGNITION_LANGUAGE,
         response_language=VOICE_RESPONSE_LANGUAGE,
         routed_to='voice_assistant.narration.narrate_credit_status',
+        response_summary=spoken_text,
+    )
+
+    return JsonResponse({'spoken_text': spoken_text})
+@login_required
+@require_POST
+def read_advisor_recap_aloud(request):
+    """
+    Reads back open Critical/High priority Recommendation rows with
+    DemandForecast context. Never recomputes anything — only reads
+    already-persisted data, exactly matching what advisor_list already
+    displays, filtered to what's actionable in a short voice recap.
+    """
+    recommendations = (
+        Recommendation.objects
+        .select_related('product', 'forecast')
+        .filter(is_actioned=False, priority__in=['critical', 'high'])
+        .order_by('-generated_at')[:10]
+    )
+
+    narrated_text = narrate_advisor_recap({'recommendations': recommendations})
+    spoken_text = format_for_speech(narrated_text)
+
+    VoiceInteraction.objects.create(
+        interaction_type='advisor_recap',
+        staff_user=request.user,
+        raw_transcript='(read-aloud request, no speech captured)',
+        recognition_language=VOICE_RECOGNITION_LANGUAGE,
+        response_language=VOICE_RESPONSE_LANGUAGE,
+        routed_to='voice_assistant.narration.narrate_advisor_recap',
         response_summary=spoken_text,
     )
 

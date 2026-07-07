@@ -132,3 +132,82 @@ def narrate_credit_status(customer, assessment, reorder_suggestions):
     parts.append("Let me know if you'd like to hear more, or head back to shopping.")
 
     return " ".join(parts)
+def _build_recommendations_section(data):
+    """
+    Narrates open Critical/High priority Recommendation rows, including
+    their associated DemandForecast context where available. Read-only —
+    never recomputes priority, forecasts, or recommendations.
+
+    This is the first of what will become a list of independent recap
+    "sections". Future business-intelligence sources (Notifications,
+    Delivery Performance, Credit Insights, etc.) can each get their own
+    _build_*_section(data) function added to _RECAP_SECTION_BUILDERS
+    below — this function and the recap assembly logic never need to change.
+    """
+    recommendations = list(data.get('recommendations') or [])
+    if not recommendations:
+        return None
+
+    critical_count = sum(1 for r in recommendations if r.priority == 'critical')
+    high_count = sum(1 for r in recommendations if r.priority == 'high')
+
+    parts = []
+    summary_bits = []
+    if critical_count:
+        summary_bits.append(f"{critical_count} critical")
+    if high_count:
+        summary_bits.append(f"{high_count} high priority")
+    parts.append(
+        f"You have {' and '.join(summary_bits)} open recommendation"
+        f"{'s' if len(recommendations) != 1 else ''} that need attention."
+    )
+
+    for rec in recommendations[:3]:
+        product_name = rec.product.product_name
+        sentence = f"For {product_name}, {rec.recommended_action.lower().rstrip('.')}."
+
+        forecast = getattr(rec, 'forecast', None)
+        if forecast and forecast.has_sufficient_data:
+            sentence = sentence.rstrip('.') + (
+                f", since demand looks {forecast.trend.lower()} based on recent forecasts."
+            )
+
+        parts.append(sentence)
+
+    remaining = len(recommendations) - min(len(recommendations), 3)
+    if remaining > 0:
+        parts.append(f"There are {remaining} more open item{'s' if remaining != 1 else ''} on the advisor page.")
+
+    return " ".join(parts)
+
+
+# Ordered list of recap sections. To add a new business-intelligence
+# source to the staff advisor recap later, write a new
+# _build_*_section(data) function and append it here — nothing else
+# in narrate_advisor_recap() needs to change.
+_RECAP_SECTION_BUILDERS = [
+    _build_recommendations_section,
+    # Future: _build_notifications_section,
+    # Future: _build_delivery_section,
+    # Future: _build_credit_section,
+]
+
+
+def narrate_advisor_recap(data):
+    """
+    Builds a spoken business recap from a dict of already-fetched data.
+    Each section reads its own key from `data` and returns a spoken
+    paragraph, or None if there's nothing to report for that section.
+    """
+    sections = [
+        text for builder in _RECAP_SECTION_BUILDERS
+        if (text := builder(data))
+    ]
+
+    if not sections:
+        return (
+            "Everything looks under control right now — there are no open "
+            "critical or high priority recommendations to report."
+        )
+
+    return " ".join(sections)
