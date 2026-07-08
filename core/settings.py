@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'advisor',
     'dashboard', 
     'ai_commerce',
-    'voice_assistant',  
+    'voice_assistant', 
+    'blockchain', 
 ]   
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

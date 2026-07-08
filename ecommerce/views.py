@@ -490,10 +490,8 @@ def payment_simulation(request, order_id):
             messages.error(request, f"Payment failed: {reference}")
             return redirect('ecommerce:payment', order_id=order.id)
 
-        # Save payment reference
-        order.payment_reference = reference
-        order.payment_confirmed = True
-        order.save()
+        # Confirm payment + record it on the audit ledger (Step 14a)
+        order.record_payment_confirmation(reference)
 
         # Confirm order — creates Sale, deducts stock, atomic
         try:

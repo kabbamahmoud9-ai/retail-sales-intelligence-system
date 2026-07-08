@@ -19,6 +19,7 @@ from products.models import Product, Category
 from sales.models import Sale, SaleItem
 from delivery.models import DeliveryZone
 from . import services
+from blockchain.services import create_ledger_entry
 
 
 # ---------------------------------------------------------------------------
@@ -313,7 +314,33 @@ class OnlineOrder(models.Model):
     # ------------------------------------------------------------------
     # Core integration: confirm order → create Sale in existing pipeline
     # ------------------------------------------------------------------
+    def record_payment_confirmation(self, payment_reference):
+        """
+        Confirms payment for this order and records the event on the
+        blockchain audit ledger.
 
+        Single entry point for marking payment_confirmed=True — every
+        payment method (Cash on Delivery, Orange Money, Afrimoney, Credit,
+        and any future method) goes through this same path, so checkout
+        views stay thin and blockchain logic is never duplicated.
+        """
+        self.payment_reference = payment_reference
+        self.payment_confirmed = True
+        self.save()
+
+        create_ledger_entry(
+            record_type='payment_confirmation',
+            record_reference=self.order_reference,
+            payload_snapshot={
+                'order_reference': self.order_reference,
+                'payment_method': self.payment_method,
+                'payment_reference': payment_reference,
+                'total_amount': str(self.total_amount),
+                'delivery_fee': str(self.delivery_fee),
+                'confirmed_at': timezone.now().isoformat(),
+            },
+        )
+        
     def confirm_order(self):
         """
         Called after payment succeeds.
@@ -374,6 +401,22 @@ class OnlineOrder(models.Model):
         # Lifetime spending, order count, preferred categories, and trust
         # score all refresh here so nothing else has to remember to do it.
         self.customer.record_confirmed_order(self)
+
+        # --- 8. Record this confirmation on the audit ledger (Step 14a) --
+        ledger_entry = create_ledger_entry(
+            record_type='online_order_confirmation',
+            record_reference=self.order_reference,
+            payload_snapshot={
+                'order_reference': self.order_reference,
+                'total_amount': str(self.total_amount),
+                'status': self.status,
+                'payment_method': self.payment_method,
+                'linked_sale_id': sale.id,
+                'confirmed_at': timezone.now().isoformat(),
+            },
+        )
+        self.transaction_hash = ledger_entry.current_hash
+        self.save(update_fields=['transaction_hash'])
 
         return sale
 
