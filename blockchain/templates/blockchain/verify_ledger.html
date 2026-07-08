@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Blockchain Audit Ledger{% endblock %}
+{% block page_title %}Blockchain Audit Ledger{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Blockchain Audit Ledger</h1>
+        <p>Tamper-evident hash-chain record of business-critical events (order and payment confirmations)</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:20px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+        <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Chain Status</div>
+                {% if is_valid %}
+                    <span class="badge-modern badge-success" style="font-size:14px; padding:6px 14px;">
+                        <i class="bi bi-shield-check"></i> Valid
+                    </span>
+                {% else %}
+                    <span class="badge-modern badge-danger" style="font-size:14px; padding:6px 14px;">
+                        <i class="bi bi-shield-exclamation"></i> Broken
+                    </span>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Total Blocks</div>
+                <div style="font-size:20px; font-weight:600;">{{ total_entries }}</div>
+            </div>
+            <div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Last Verified</div>
+                <div style="font-size:14px;">{{ verified_at|date:"M d, Y H:i:s" }}</div>
+            </div>
+        </div>
+        <a href="{% url 'blockchain:verify_ledger' %}" class="btn-primary-modern" style="padding:8px 18px; font-size:13px;">
+            <i class="bi bi-arrow-clockwise"></i> Run Verification Again
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    {% if broken_entries %}
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Sequence #</th>
+                    <th>Entry ID</th>
+                    <th>Issue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for broken in broken_entries %}
+                <tr>
+                    <td style="font-weight:600;">{{ broken.sequence_number }}</td>
+                    <td>{{ broken.entry_id }}</td>
+                    <td>
+                        {% if broken.reason == 'hash_mismatch' %}
+                            <span class="badge-modern badge-danger"><i class="bi bi-exclamation-circle-fill"></i> Hash Mismatch — payload may have been altered</span>
+                        {% else %}
+                            <span class="badge-modern badge-danger"><i class="bi bi-exclamation-triangle-fill"></i> Broken Link — entry may be deleted or reordered</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-shield-check"></i>
+        <p>All entries verified</p>
+        <span>Every block's hash matches its recomputed value, and the chain link is intact from block 1 through {{ total_entries }}.</span>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

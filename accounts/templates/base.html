@@ -126,6 +126,11 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a href="{% url 'blockchain:verify_ledger' %}" class="nav-link {% if request.resolver_match.url_name == 'verify_ledger' %}active{% endif %}">
+                    <i class="bi bi-link-45deg"></i> Blockchain Ledger
+                </a>
+            </div>
+            <div class="nav-item">
                 <a href="{% url 'customer_intelligence_list' %}" class="nav-link {% if 'customer_intelligence' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="bi bi-person-lines-fill"></i> Customer Intelligence
                 </a>
