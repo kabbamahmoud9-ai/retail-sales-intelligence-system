@@ -20,4 +20,5 @@ urlpatterns = [
     path('store/assistant/', include('ai_commerce.urls')),
     path('store/voice/', include('voice_assistant.urls')),
     path('blockchain/', include('blockchain.urls')),
+    path('store/visual-search/', include('visual_search.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

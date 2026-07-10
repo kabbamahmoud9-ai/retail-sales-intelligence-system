@@ -1,0 +1,66 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Visual Search Results{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:1.5rem;">
+    <h2 style="margin-bottom:0.25rem;">Search by Image</h2>
+    <p style="color:var(--text-muted); font-size:0.9rem;">Upload a product photo to find visually similar items.</p>
+</div>
+
+<form method="post" action="{% url 'visual_search:results' %}" enctype="multipart/form-data" class="store-search-bar">
+    {% csrf_token %}
+    <input type="file" name="query_image" accept="image/*" required style="flex:1; min-width:200px;">
+    <button type="submit" class="btn-primary-modern" style="padding:0.5rem 1.25rem;">Search</button>
+</form>
+
+{% if has_results %}
+    <p style="color:var(--text-muted); font-size:0.9rem; margin:1rem 0;">
+        {{ matches|length }} similar product{{ matches|length|pluralize }} found
+    </p>
+
+    {% if matches %}
+    <div class="product-grid">
+        {% for match in matches %}
+        <div class="product-card">
+            <a href="{% url 'ecommerce:product_detail' match.product.id %}">
+                {% if match.product.product_image %}
+                    <img src="{{ match.product.product_image.url }}" alt="{{ match.product.product_name }}">
+                {% else %}
+                    <div class="product-card-placeholder">📦</div>
+                {% endif %}
+            </a>
+            <div class="product-card-body">
+                <div class="product-card-title">
+                    <a href="{% url 'ecommerce:product_detail' match.product.id %}" style="text-decoration:none; color:inherit;">
+                        {{ match.product.product_name }}
+                    </a>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                    {{ match.product.category.category_name }}
+                </div>
+                <div style="font-size:0.78rem; color:var(--success); font-weight:600; margin-bottom:0.5rem;">
+                    {{ match.similarity_score|floatformat:2 }} similarity
+                </div>
+                <div class="product-card-price">Le {{ match.product.online_price|floatformat:2 }}</div>
+                <form method="post" action="{% url 'ecommerce:add_to_cart' match.product.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn-primary-modern" style="width:100%; padding:0.5rem;">
+                        Add to Cart
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:4rem 2rem; color:var(--text-muted);">
+        <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+        <p style="font-size:1.1rem;">No similar products found.</p>
+        <p>Try a different photo.</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

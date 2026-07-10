@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'ai_commerce',
     'voice_assistant', 
     'blockchain', 
+    'visual_search',
 ]   
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

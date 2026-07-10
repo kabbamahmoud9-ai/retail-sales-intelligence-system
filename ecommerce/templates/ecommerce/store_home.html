@@ -3,6 +3,7 @@
 
 {% block content %}
 
+
 <!-- Search & filter bar -->
 <form method="get" class="store-search-bar">
     <input type="text" name="q" value="{{ query }}" placeholder="Search products...">
@@ -20,6 +21,12 @@
     {% endif %}
 </form>
 
+<!-- Visual search widget -->
+<form method="post" action="{% url 'visual_search:results' %}" enctype="multipart/form-data" class="store-search-bar" style="margin-top:0.75rem;">
+    {% csrf_token %}
+    <input type="file" name="query_image" accept="image/*" required style="flex:1; min-width:200px;">
+    <button type="submit" class="btn-primary-modern" style="padding:0.5rem 1.25rem;">📷 Search by Image</button>
+</form>
 <!-- Results count -->
 <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">
     {{ products.count }} product{{ products.count|pluralize }} available
