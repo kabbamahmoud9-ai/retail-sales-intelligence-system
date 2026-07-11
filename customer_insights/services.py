@@ -249,3 +249,79 @@ def get_personalized_recommendations(customer, limit=5):
     """
     suggestions = get_reorder_suggestions(customer, limit=limit)
     return [s['product'].id for s in suggestions]
+# ---------------------------------------------------------------------------
+# Rule-based predictive fallback — used when a customer doesn't meet
+# ml_services.MIN_ORDERS_FOR_ML
+# ---------------------------------------------------------------------------
+
+def generate_rule_based_predictions(customer, metrics):
+    """
+    Simple, transparent heuristics — no ML. Ensures every customer gets
+    SOME prediction, even brand-new ones with 0-2 orders.
+    """
+    predicted_next_purchase_date = None
+    if metrics['last_order_date'] and metrics['order_frequency_days']:
+        predicted_next_purchase_date = (
+            metrics['last_order_date'] + timedelta(days=metrics['order_frequency_days'])
+        ).date()
+
+    churn_risk_score = None
+    if metrics['last_order_date']:
+        days_since_last = (timezone.now() - metrics['last_order_date']).days
+        interval = metrics['order_frequency_days'] or AT_RISK_DEFAULT_DAYS
+        threshold = interval * AT_RISK_INTERVAL_MULTIPLIER
+        churn_risk_score = min(days_since_last / threshold, 1.0) if threshold else None
+
+    estimated_lifetime_value = float(customer.lifetime_spending) if customer.lifetime_spending else 0.0
+
+    return {
+        'predicted_next_purchase_date': predicted_next_purchase_date,
+        'estimated_lifetime_value': estimated_lifetime_value,
+        'churn_risk_score': churn_risk_score,
+        'model_version': 'v1-rule-based',
+    }
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator — the SINGLE entry point for creating a CustomerInsightSnapshot.
+# Called identically by generate_customer_insights (batch) and the
+# per-customer "Regenerate Insights" staff button (16f) — zero duplicated logic.
+# ---------------------------------------------------------------------------
+
+def generate_customer_insight(customer):
+    from .models import CustomerInsightSnapshot
+    from . import ml_services
+
+    metrics = calculate_behaviour_metrics(customer)
+    segment = classify_segment(customer, metrics)
+
+    ml_predictions = ml_services.generate_ml_predictions(customer)
+    if ml_predictions:
+        prediction_data = ml_predictions
+        prediction_method = 'ml'
+        model_version = ml_predictions['model_version']
+    else:
+        prediction_data = generate_rule_based_predictions(customer, metrics)
+        prediction_method = 'rule_based'
+        model_version = prediction_data['model_version']
+
+    recommended_ids = get_personalized_recommendations(customer)
+    summary = generate_summary_text(customer, metrics, segment, prediction_data)
+
+    return CustomerInsightSnapshot.objects.create(
+        customer=customer,
+        segment=segment,
+        avg_order_value=metrics['avg_order_value'],
+        order_frequency_days=metrics['order_frequency_days'],
+        favorite_category_id=metrics['favorite_category_id'],
+        preferred_payment_method=metrics['preferred_payment_method'],
+        preferred_shopping_time=metrics['preferred_shopping_time'],
+        has_sufficient_data=(prediction_method == 'ml'),
+        prediction_method=prediction_method,
+        churn_risk_score=prediction_data['churn_risk_score'],
+        predicted_next_purchase_date=prediction_data['predicted_next_purchase_date'],
+        estimated_lifetime_value=prediction_data['estimated_lifetime_value'],
+        ai_summary_text=summary,
+        recommended_product_ids=recommended_ids,
+        model_version=model_version,
+    )
