@@ -1,5 +1,5 @@
 {% extends 'ecommerce/base_store.html' %}
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.product_name }}{% endblock %}
 
 {% block content %}
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; align-items:start;">
@@ -16,9 +16,9 @@
     <!-- Product info -->
     <div>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">
-            <a href="{% url 'ecommerce:store_home' %}" style="color:var(--primary-color);">Shop</a> / {{ product.category.name }}
+            <a href="{% url 'ecommerce:store_home' %}" style="color:var(--primary-color);">Shop</a> / {{ product.category.category_name }}
         </div>
-        <h1 style="font-size:1.75rem; font-weight:700; margin-bottom:0.5rem;">{{ product.name }}</h1>
+        <h1 style="font-size:1.75rem; font-weight:700; margin-bottom:0.5rem;">{{ product.product_name }}</h1>
         <div style="font-size:2rem; font-weight:700; color:var(--primary-color); margin-bottom:1rem;">
             Le {{ product.online_price|floatformat:2 }}
         </div>

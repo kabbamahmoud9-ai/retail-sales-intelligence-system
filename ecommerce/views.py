@@ -21,6 +21,7 @@ from django.db import transaction
 from products.models import Product, Category
 from delivery.models import DeliveryZone
 from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
+from customer_insights.capture import log_search_query, log_category_view, log_product_view
 
 
 # ---------------------------------------------------------------------------
@@ -193,11 +194,17 @@ def store_home(request):
     query = request.GET.get('q', '').strip()
     if query:
         products = products.filter(product_name__icontains=query)
+        log_search_query(request, customer, query)
 
     # Category filter
     cat_id = request.GET.get('category', '')
     if cat_id:
         products = products.filter(category_id=cat_id)
+        try:
+            category_obj = categories.get(id=cat_id)
+            log_category_view(request, customer, category_obj)
+        except (Category.DoesNotExist, ValueError):
+            pass
 
     context = {
         'products':    products,
@@ -221,6 +228,8 @@ def product_detail(request, product_id):
         id=product_id,
         is_available_online=True
     )
+
+    log_product_view(request, customer, product)
 
     context = {
         'product':    product,
