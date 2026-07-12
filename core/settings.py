@@ -148,3 +148,11 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# --- Conversational Shopping AI (Step 17) -----------------------------
+# 'rule_based' (default) — fully offline, no external dependency, the
+# system this dissertation is evaluated on. 'gemini' is an optional,
+# documented extension point — see ai_commerce/llm_adapter.py. Flipping
+# this setting is the ONLY way llm_adapter.py ever gets imported at all.
+CONVERSATIONAL_AI_BACKEND = config('CONVERSATIONAL_AI_BACKEND', default='rule_based')
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
