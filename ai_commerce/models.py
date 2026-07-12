@@ -173,3 +173,81 @@ class CreditAssessment(models.Model):
             f"{self.customer} - {self.get_eligibility_status_display()} "
             f"(Le {self.recommended_credit_limit}) @ {self.generated_at:%Y-%m-%d}"
         )
+class ConversationSession(models.Model):
+    """
+    A single multi-turn Conversational Shopping AI session (Mode 4).
+
+    Unlike ShoppingSession (one row per single request/response), a
+    ConversationSession spans an entire back-and-forth conversation.
+    context_state accumulates slot-filled information across turns
+    (e.g. budget, occasion, dietary preference) so later turns in the
+    same conversation can reference earlier ones without re-asking.
+
+    This model holds NO business logic itself — it is purely state.
+    All actual intelligence (intent classification, routing to the
+    Shopping Assistant / Credit Assistant / Visual Search / Customer
+    Insights / Delivery services) lives in ai_commerce/conversational.py.
+    """
+
+    customer = models.ForeignKey(
+        'ecommerce.OnlineCustomer',
+        on_delete=models.CASCADE,
+        related_name='conversation_sessions',
+        null=True, blank=True,
+        help_text="Nullable — guest conversations are supported, same as CustomerEvent."
+    )
+    context_state = models.JSONField(
+        default=dict, blank=True,
+        help_text="Accumulated slot-filled context across turns, e.g. "
+                   "{'budget': 15000, 'occasion': 'party', 'dietary': 'no pork'}"
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-last_message_at']
+        verbose_name = 'Conversation Session'
+        verbose_name_plural = 'Conversation Sessions'
+
+    def __str__(self):
+        who = self.customer.full_name if self.customer else f"Guest session #{self.pk}"
+        return f"{who} — started {self.started_at:%Y-%m-%d %H:%M}"
+
+
+class ConversationTurn(models.Model):
+    """
+    A single message within a ConversationSession — either the customer's
+    message or the assistant's reply. Append-only, same philosophy as
+    ShoppingRecommendation/CreditAssessment — full conversation history
+    is retained for dissertation evaluation of multi-turn coherence.
+
+    routed_to records which existing service actually handled this turn
+    (e.g. 'shopping_assistant', 'credit_assistant', 'visual_search',
+    'customer_insights', 'delivery', 'llm_adapter') — useful both for
+    debugging and as evidence the orchestration layer is genuinely
+    routing to existing services rather than reimplementing logic.
+    """
+
+    ROLE_CHOICES = [
+        ('user', 'Customer'),
+        ('assistant', 'Assistant'),
+    ]
+
+    session = models.ForeignKey(
+        ConversationSession, on_delete=models.CASCADE, related_name='turns'
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    message_text = models.TextField()
+    intent_detected = models.CharField(max_length=50, blank=True)
+    routed_to = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['session', 'created_at']
+        verbose_name = 'Conversation Turn'
+        verbose_name_plural = 'Conversation Turns'
+        indexes = [models.Index(fields=['session', 'created_at'])]
+
+    def __str__(self):
+        preview = self.message_text[:50] + ('...' if len(self.message_text) > 50 else '')
+        return f"[{self.get_role_display()}] {preview}"
