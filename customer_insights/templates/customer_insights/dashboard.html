@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Customer Insights{% endblock %}
+{% block page_title %}Customer Insights{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>AI Customer Insights Engine</h1>
+        <p>Segment, churn risk, and predictive insights generated from purchase and browsing history</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Segment</th>
+                    <th>Churn Risk</th>
+                    <th>Predicted Next Purchase</th>
+                    <th>Est. Lifetime Value</th>
+                    <th>Method</th>
+                    <th>Last Generated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td style="font-weight:600;">{{ row.customer.full_name }}</td>
+                    <td>
+                        {% if row.snapshot %}
+                            {% if row.snapshot.segment == 'vip' %}
+                                <span class="badge-modern" style="background:#F3E8FF; color:#7C3AED;"><i class="bi bi-gem"></i> VIP</span>
+                            {% elif row.snapshot.segment == 'at_risk' %}
+                                <span class="badge-modern badge-danger"><i class="bi bi-exclamation-triangle"></i> At-Risk</span>
+                            {% elif row.snapshot.segment == 'frequent_buyer' %}
+                                <span class="badge-modern badge-success"><i class="bi bi-arrow-repeat"></i> Frequent Buyer</span>
+                            {% elif row.snapshot.segment == 'premium_shopper' %}
+                                <span class="badge-modern badge-warning"><i class="bi bi-star-fill"></i> Premium Shopper</span>
+                            {% elif row.snapshot.segment == 'price_sensitive' %}
+                                <span class="badge-modern badge-info"><i class="bi bi-tag"></i> Price-Sensitive</span>
+                            {% elif row.snapshot.segment == 'new' %}
+                                <span class="badge-modern" style="background:#F1F5F9; color:#64748B;"><i class="bi bi-person-plus"></i> New</span>
+                            {% else %}
+                                <span class="badge-modern badge-success"><i class="bi bi-heart-fill"></i> Loyal</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge-modern" style="background:#F1F5F9; color:#64748B;">Not generated</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.snapshot and row.snapshot.churn_risk_score is not None %}
+                            {% if row.snapshot.churn_risk_score >= 0.6 %}
+                                <span class="badge-modern badge-danger">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                            {% elif row.snapshot.churn_risk_score >= 0.3 %}
+                                <span class="badge-modern badge-warning">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                            {% else %}
+                                <span class="badge-modern badge-success">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ row.snapshot.predicted_next_purchase_date|date:"M d, Y"|default:"—" }}</td>
+                    <td>{% if row.snapshot.estimated_lifetime_value %}Le {{ row.snapshot.estimated_lifetime_value|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if row.snapshot %}
+                            {% if row.snapshot.prediction_method == 'ml' %}
+                                <span class="badge-modern badge-info"><i class="bi bi-cpu"></i> ML</span>
+                            {% else %}
+                                <span class="badge-modern" style="background:#F1F5F9; color:#64748B;">Rule-Based</span>
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ row.snapshot.generated_at|date:"M d, Y H:i"|default:"—" }}</td>
+                    <td>
+                        <a href="{% url 'customer_insights:detail' row.customer.id %}" class="btn-icon" title="View Insights">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <i class="bi bi-graph-up"></i>
+                        <p>No customers yet</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

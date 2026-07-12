@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}{{ customer.full_name }} — Insights{% endblock %}
+{% block page_title %}Customer Insights{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>{{ customer.full_name }}</h1>
+        <p>{{ customer.email }}</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; padding:16px 20px;">
+    <form method="POST" action="{% url 'customer_insights:regenerate' customer.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-primary-modern"><i class="bi bi-arrow-clockwise"></i> Regenerate Insights</button>
+    </form>
+</div>
+
+{% if snapshot %}
+<div class="card" style="margin-bottom:16px; padding:20px;">
+    <h3 style="margin-bottom:12px;">Latest Insight — {{ snapshot.generated_at|date:"M d, Y H:i" }}</h3>
+    <p style="color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">{{ snapshot.ai_summary_text }}</p>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Segment</div>
+            <div style="font-weight:700; font-size:1.1rem;">{{ snapshot.get_segment_display }}</div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Churn Risk</div>
+            <div style="font-weight:700; font-size:1.1rem;">
+                {% if snapshot.churn_risk_score is not None %}{{ snapshot.churn_risk_score|floatformat:0 }}%{% else %}—{% endif %}
+            </div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Predicted Next Purchase</div>
+            <div style="font-weight:700; font-size:1.1rem;">{{ snapshot.predicted_next_purchase_date|date:"M d, Y"|default:"—" }}</div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Est. Lifetime Value</div>
+            <div style="font-weight:700; font-size:1.1rem;">Le {{ snapshot.estimated_lifetime_value|floatformat:2|default:"—" }}</div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Avg Order Value</div>
+            <div style="font-weight:700; font-size:1.1rem;">Le {{ snapshot.avg_order_value|floatformat:2|default:"—" }}</div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Preferred Payment</div>
+            <div style="font-weight:700; font-size:1.1rem;">{{ snapshot.preferred_payment_method|default:"—" }}</div>
+        </div>
+        <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Prediction Method</div>
+            <div style="font-weight:700; font-size:1.1rem;">
+                {% if snapshot.prediction_method == 'ml' %}
+                    <span class="badge-modern badge-info">ML</span>
+                {% else %}
+                    <span class="badge-modern" style="background:#F1F5F9; color:#64748B;">Rule-Based</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="padding:20px;">
+    <h3 style="margin-bottom:12px;">Snapshot History</h3>
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Generated</th>
+                    <th>Segment</th>
+                    <th>Churn Risk</th>
+                    <th>Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history %}
+                <tr>
+                    <td>{{ h.generated_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ h.get_segment_display }}</td>
+                    <td>{% if h.churn_risk_score is not None %}{{ h.churn_risk_score|floatformat:0 }}%{% else %}—{% endif %}</td>
+                    <td>{{ h.get_prediction_method_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <i class="bi bi-graph-up"></i>
+        <p>No insights generated yet for this customer. Click "Regenerate Insights" above.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
