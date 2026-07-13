@@ -22,7 +22,7 @@ import json
 import requests
 from django.conf import settings
 
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
 
 
 def _call_gemini(prompt):
@@ -41,7 +41,7 @@ def _call_gemini(prompt):
             f"{GEMINI_API_URL}?key={api_key}",
             headers={'Content-Type': 'application/json'},
             json={"contents": [{"parts": [{"text": prompt}]}]},
-            timeout=10,
+            timeout=25,
         )
         response.raise_for_status()
         data = response.json()

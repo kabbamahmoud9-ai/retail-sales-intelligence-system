@@ -9,6 +9,10 @@ customer_login_required) and cart helpers (get_cart, save_cart,
 get_cart_count) directly rather than duplicating them — the cart stays
 a single source of truth, same structure as ecommerce.views.add_to_cart.
 """
+import json
+from django.http import JsonResponse
+from .models import ConversationSession
+from .conversational import process_message
 
 from decimal import Decimal, InvalidOperation
 
@@ -223,3 +227,48 @@ def credit_loyalty_assistant(request):
         'reorder_suggestions': reorder_suggestions,
     })
     return render(request, 'ai_commerce/credit_loyalty.html', context)
+
+
+@customer_login_required
+def conversational_chat(request):
+    """
+    Renders the Mode 4 chat UI. Creates a new ConversationSession per
+    page load (a fresh conversation each time the customer opens this
+    page) — session_id is embedded in the page and used by every
+    subsequent AJAX call to conversational_message below.
+    """
+    customer = get_current_customer(request)
+    context = _base_context(request, customer)
+
+    session = ConversationSession.objects.create(customer=customer)
+    context['conversation_session_id'] = session.id
+
+    return render(request, 'ai_commerce/conversational_chat.html', context)
+
+
+@customer_login_required
+def conversational_message(request, session_id):
+    """
+    AJAX endpoint — receives one customer message, returns the assistant's
+    reply as JSON. Called by the chat UI's JS on every message send.
+    Delegates entirely to conversational.process_message() — this view
+    has zero business logic itself, purely request/response plumbing.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    customer = get_current_customer(request)
+    session = get_object_or_404(ConversationSession, id=session_id, customer=customer)
+
+    try:
+        body = json.loads(request.body)
+        message_text = body.get('message', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'error': 'Invalid request body'}, status=400)
+
+    if not message_text:
+        return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+
+    reply_text = process_message(session, customer, message_text)
+
+    return JsonResponse({'reply': reply_text})

@@ -20,4 +20,6 @@ urlpatterns = [
     path('session/<int:session_id>/add-all/', views.add_all_to_cart_view, name='add_all_to_cart'),
     path('recommendation/<int:rec_id>/feedback/', views.recommendation_feedback, name='recommendation_feedback'),
     path('credit-loyalty/', views.credit_loyalty_assistant, name='credit_loyalty'),
+    path('chat/', views.conversational_chat, name='chat'),
+    path('chat/<int:session_id>/message/', views.conversational_message, name='chat_message'),
 ]

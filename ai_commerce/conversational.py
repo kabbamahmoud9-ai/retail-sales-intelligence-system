@@ -146,8 +146,15 @@ def _handle_shopping_query(customer, message_text, context_state):
 
 def _handle_credit_question(customer):
     assessment = calculate_credit_recommendation(customer)
-    return assessment.reasoning, 'credit_assistant'
 
+    if assessment.eligibility_status == 'eligible_increase':
+        prefix = f"Yes — you're eligible for a credit purchase, and you actually qualify for a higher limit. "
+    elif assessment.eligibility_status == 'maintain':
+        prefix = f"Yes, you can purchase on credit within your current limit of Le {customer.credit_limit}. "
+    else:
+        prefix = "Your account needs a quick review before I can confirm a credit purchase. "
+
+    return prefix + assessment.reasoning, 'credit_assistant'
 
 def _handle_reorder_question(customer):
     suggestions = get_reorder_suggestions(customer, limit=3)

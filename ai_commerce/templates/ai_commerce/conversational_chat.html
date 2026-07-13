@@ -1,0 +1,80 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}AI Chat Assistant{% endblock %}
+{% block content %}
+
+<h2 style="font-size:1.4rem; font-weight:700; margin-bottom:0.5rem;">💬 Chat with our AI Assistant</h2>
+<p style="color:var(--text-muted); margin-bottom:1.5rem;">Ask about products, credit, delivery, or your order history — all in one conversation.</p>
+
+<div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; height:65vh;">
+    <div id="chatMessages" style="flex:1; overflow-y:auto; padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
+        <div style="align-self:flex-start; background:var(--bg-secondary); border-radius:var(--radius-md); padding:0.75rem 1rem; max-width:75%;">
+            Hi {{ customer.full_name|truncatechars:15 }}! I can help you find products, check your credit or delivery options, or reorder something you've bought before. What are you looking for?
+        </div>
+    </div>
+
+    <form id="chatForm" style="display:flex; gap:0.75rem; padding:1rem; border-top:1px solid var(--border-color);">
+        {% csrf_token %}
+        <input type="text" id="chatInput" placeholder="Type your message..." required
+               style="flex:1; border:1.5px solid var(--border-color); border-radius:var(--radius-md); padding:0.65rem 1rem; font-family:inherit; font-size:0.9rem; outline:none;">
+        <button type="submit" class="btn-primary-modern" style="padding:0.65rem 1.5rem;">Send</button>
+    </form>
+</div>
+
+<script>
+(function() {
+    const sessionId = {{ conversation_session_id }};
+    const messagesEl = document.getElementById('chatMessages');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    function addBubble(text, role) {
+        const bubble = document.createElement('div');
+        bubble.style.alignSelf = role === 'user' ? 'flex-end' : 'flex-start';
+        bubble.style.background = role === 'user' ? 'var(--primary-color)' : 'var(--bg-secondary)';
+        bubble.style.color = role === 'user' ? 'white' : 'var(--text-primary)';
+        bubble.style.borderRadius = 'var(--radius-md)';
+        bubble.style.padding = '0.75rem 1rem';
+        bubble.style.maxWidth = '75%';
+        bubble.style.whiteSpace = 'pre-wrap';
+        bubble.textContent = text;
+        messagesEl.appendChild(bubble);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = input.value.trim();
+        if (!message) return;
+
+        addBubble(message, 'user');
+        input.value = '';
+        input.disabled = true;
+
+        try {
+            const response = await fetch(`/store/assistant/chat/${sessionId}/message/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ message: message }),
+            });
+            const data = await response.json();
+
+            if (data.reply) {
+                addBubble(data.reply, 'assistant');
+            } else {
+                addBubble("Sorry, something went wrong. Please try again.", 'assistant');
+            }
+        } catch (err) {
+            addBubble("Sorry, I couldn't reach the assistant. Please try again.", 'assistant');
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    });
+})();
+</script>
+
+{% endblock %}
