@@ -156,3 +156,13 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 # this setting is the ONLY way llm_adapter.py ever gets imported at all.
 CONVERSATIONAL_AI_BACKEND = config('CONVERSATIONAL_AI_BACKEND', default='rule_based')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+
+# --- AI Demand Forecasting (Step 10, revisited for dissertation demo) --
+# Minimum days of completed sales history required before a real forecast
+# is generated, instead of an insufficient-data placeholder. 30 is the
+# recommended production value (better statistical reliability); 7 is a
+# research/demo-only value used to make the feature evaluable within a
+# dissertation's limited data-collection window. Switching between them
+# is a one-line .env change plus a server restart — no code or schema
+# changes required either way. See forecasting/services.py.
+MIN_FORECAST_HISTORY_DAYS = config('MIN_FORECAST_HISTORY_DAYS', default=30, cast=int)

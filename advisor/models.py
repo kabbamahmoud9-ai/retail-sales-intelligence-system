@@ -37,6 +37,17 @@ class Recommendation(models.Model):
     is_actioned = models.BooleanField(default=False)
     actioned_at = models.DateTimeField(null=True, blank=True)
 
+    confidence_score = models.FloatField(
+        null=True, blank=True,
+        help_text="0.0-1.0. How confident the advisor is in this recommendation, "
+                   "based on forecast confidence, data sufficiency, and signal strength."
+    )
+    confidence_reasons = models.JSONField(
+        default=list, blank=True,
+        help_text="List of short strings explaining what drove the confidence score, "
+                   "e.g. ['Forecast available', 'Sales trend increasing', 'Stock below reorder point']"
+    )
+
     generated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -48,3 +59,61 @@ class Recommendation(models.Model):
 
     def __str__(self):
         return f"[{self.get_priority_display()}] {self.product.product_name} — {self.recommended_action}"
+
+class AdvisorConversationSession(models.Model):
+    """
+    A single multi-turn conversation between a staff member and the AI
+    Business Advisor's conversational layer (Step 19). Staff-scoped —
+    completely separate from ai_commerce.ConversationSession, which is
+    customer-facing. Mirrors that model's structure (context_state for
+    slot-filling, append-only turns) but with staff auth instead.
+    """
+    staff_user = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='advisor_conversation_sessions',
+    )
+    context_state = models.JSONField(default=dict, blank=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-last_message_at']
+        verbose_name = 'Advisor Conversation Session'
+        verbose_name_plural = 'Advisor Conversation Sessions'
+
+    def __str__(self):
+        return f"{self.staff_user.username} — started {self.started_at:%Y-%m-%d %H:%M}"
+
+
+class AdvisorConversationTurn(models.Model):
+    """
+    Append-only log of a single message within an AdvisorConversationSession.
+    Same pattern as ai_commerce.ConversationTurn — intent_detected and
+    routed_to record which read-only module function actually answered
+    the question, for transparency and dissertation evidence that this
+    is genuine orchestration, not reimplemented logic.
+    """
+    ROLE_CHOICES = [
+        ('staff', 'Staff'),
+        ('assistant', 'Assistant'),
+    ]
+
+    session = models.ForeignKey(
+        AdvisorConversationSession, on_delete=models.CASCADE, related_name='turns'
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    message_text = models.TextField()
+    intent_detected = models.CharField(max_length=50, blank=True)
+    routed_to = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['session', 'created_at']
+        verbose_name = 'Advisor Conversation Turn'
+        verbose_name_plural = 'Advisor Conversation Turns'
+        indexes = [models.Index(fields=['session', 'created_at'])]
+
+    def __str__(self):
+        preview = self.message_text[:50] + ('...' if len(self.message_text) > 50 else '')
+        return f"[{self.get_role_display()}] {preview}"

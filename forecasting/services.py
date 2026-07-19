@@ -36,11 +36,12 @@ from django.db.models import Sum
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
+from django.conf import settings
+
 from products.models import Product
 from sales.models import SaleItem
 from .models import DemandForecast
 
-MIN_HISTORY_DAYS = 30
 MODEL_VERSION = "v1.0-linreg"
 TREND_THRESHOLD_RATIO = 0.10  # slope must move >10% of historical avg per week to count as trending
 LOW_DATA_WEEK_COUNT = 8       # fewer weeks than this caps confidence score
@@ -154,16 +155,18 @@ def generate_forecast_for_product(product, today=None):
     forecast_period_start = today
     forecast_period_end = today + timedelta(days=6)
 
-    if first_sale_date is None or (today - first_sale_date).days < MIN_HISTORY_DAYS:
+    min_history_days = settings.MIN_FORECAST_HISTORY_DAYS
+
+    if first_sale_date is None or (today - first_sale_date).days < min_history_days:
         return DemandForecast.objects.create(
             product=product,
             forecast_period_start=forecast_period_start,
             forecast_period_end=forecast_period_end,
             has_sufficient_data=False,
             insufficient_data_message=(
-                "Needs at least 30 days of completed sales history to generate a forecast."
+                f"Needs at least {min_history_days} days of completed sales history to generate a forecast."
                 if first_sale_date is None
-                else f"Only {(today - first_sale_date).days} of {MIN_HISTORY_DAYS} required days of sales history available."
+                else f"Only {(today - first_sale_date).days} of {min_history_days} required days of sales history available."
             ),
             model_version=MODEL_VERSION,
         )
