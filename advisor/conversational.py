@@ -20,12 +20,7 @@ philosophy as ai_commerce/llm_adapter.py's optional Gemini backend).
 import re
 from ai_commerce.services import _tokenize_and_lemmatize
 from . import data_gathering as dg
-
-def generate_business_health_summary():
-    """
-    TEMPORARY STUB for 19c testing — real version comes in 19d.
-    """
-    return {"status": "Business Health dashboard not yet built (coming in 19d)"}
+from .business_health import generate_business_health_summary
 
 CONVERSATIONAL_VERSION = "v1-rule-based"
 
