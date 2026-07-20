@@ -1,57 +1,76 @@
 """
 advisor/conversational.py
 
-Orchestration layer for the AI Business Consultant (Step 19c). Contains
+Orchestration layer for the AI Business Consultant (Step 19). Contains
 ZERO business logic of its own — every question is routed to a read-only
 function in advisor.data_gathering, which in turn reads from existing
 services across forecasting, sales, customer_insights, ecommerce,
 delivery, expenses, and blockchain. This file's only job: classify staff
-questions (rule-based, extends the same tokenize/lemmatize pattern
-already used in ai_commerce.services), route to the correct
+questions (rule-based keyword matching), route to the correct
 data_gathering function, and phrase a natural, professional,
 Sierra-Leonean-toned response.
 
-Language: English only in v1. The PHRASES dictionary below is the
-designed extension seam for Krio — adding a second dictionary keyed by
-language and a language-detection step is the only work required later;
-nothing else in this file would need to change (same "documented seam"
-philosophy as ai_commerce/llm_adapter.py's optional Gemini backend).
+Language: English only in v1. The handler functions below are the
+designed extension seam for Krio — adding a second phrase-template set
+keyed by language and a language-detection step is the only work
+required later; nothing else in this file would need to change (same
+"documented seam" philosophy as ai_commerce/llm_adapter.py's optional
+Gemini backend).
 """
 import re
-from ai_commerce.services import _tokenize_and_lemmatize
+
 from . import data_gathering as dg
 from .business_health import generate_business_health_summary
 
 CONVERSATIONAL_VERSION = "v1-rule-based"
 
 _INTENT_PATTERNS = {
-    'restock_question':      {'restock', 'reorder', 'stock', 'order more'},
+    'restock_question':      {'restock', 'reorder', 'order more'},
     'slow_moving_question':  {'slow', 'not selling', 'stagnant', 'unsold'},
     'overstocked_question':  {'overstocked', 'too much stock', 'excess'},
-    'top_sellers_question':  {'top selling', 'best selling', 'bestseller', 'sell pass', 'top seller'},
-    'todays_sales_question': {'today', 'todays sales', "today's sales"},
+    'top_sellers_question':  {'top selling', 'best selling', 'bestseller', 'sell pass'},
+    'todays_sales_question': {'today sales', 'sales today'},
     'forecast_question':     {'forecast', 'demand', 'trend', 'increasing', 'decreasing'},
     'churn_question':        {'churn', 'at risk', 'atrisk', 'leaving', 'stop buying'},
     'vip_question':          {'vip', 'loyal', 'best customer', 'reward'},
     'credit_question':       {'credit limit', 'owe', 'overdue', 'balance'},
-    'delivery_question':     {'delivery zone', 'profitable zone', 'delivery profit'},
+    'delivery_question':     {'delivery zone', 'profitable zone', 'delivery profit', 'delivery perform'},
     'expense_question':      {'expense', 'spending', 'cost'},
     'blockchain_question':   {'blockchain', 'ledger', 'audit', 'tamper'},
     'business_summary':      {'summary', 'briefing', 'business health', 'how am i doing', 'overview'},
+    'advice_question':       {'suggest', 'advice', 'recommend', 'increase sales', 'boost sales',
+                               'grow sales', 'sell more', 'reduce churn', 'improve business', 'what should i do'},
     'greeting':              {'hello', 'hi', 'hey', 'good morning', 'good afternoon'},
-    'advice_question':       {'suggest', 'advice', 'recommend', 'increase sales', 'boost sales','grow sales', 'sell more', 'reduce churn', 'improve business', 'what should i do'},
 }
 
 
 def _classify_intent(message_text):
-    lemmas = set(_tokenize_and_lemmatize(message_text))
-    message_lower = message_text.lower()
+    """
+    Tokenizes the message into lowercase word tokens, then matches
+    keywords via PREFIX matching per token (e.g. keyword "zone" matches
+    token "zones", "owe" matches "owes", "suggest" matches "suggestions")
+    — this handles plurals and verb inflections without needing an
+    explicit variant for every possible word form.
+
+    Multi-word phrases match if ALL component words are present
+    somewhere in the message as token prefixes, in ANY order — so
+    "selling best" and "best selling" both match the phrase
+    "best selling", and "delivery zones" matches "delivery zone".
+    """
+    raw_tokens = re.findall(r'[a-z]+', message_text.lower())
+
+    def _phrase_matches(phrase):
+        words = phrase.split()
+        return all(
+            any(token.startswith(word) for token in raw_tokens)
+            for word in words
+        )
+
     for intent, keywords in _INTENT_PATTERNS.items():
         for kw in keywords:
-            if kw in lemmas:
+            if _phrase_matches(kw):
                 return intent
-            if re.search(r'\b' + re.escape(kw) + r'\b', message_lower):
-                return intent
+
     return 'unclear'
 
 
@@ -188,18 +207,6 @@ def _handle_blockchain(staff_user):
     return f"Warning: the audit ledger shows {len(status['broken_entries'])} broken entr(y/ies) out of {status['total_entries']}. This needs immediate attention.", 'blockchain'
 
 
-def _handle_greeting(staff_user):
-    name = staff_user.get_full_name() or staff_user.username
-    return f"Hello {name}! I'm your AI Business Consultant — ask me about restocking, sales, forecasts, customers, credit, delivery, expenses, or the audit ledger, and I'll pull the real numbers for you.", 'greeting'
-
-
-def _handle_unclear(staff_user):
-    return (
-        "I'm not sure I understood that. Try asking things like: "
-        "\"Which products should I restock?\", \"What's today's sales summary?\", "
-        "\"Which customers are at risk of churning?\", or \"Is the blockchain ledger intact?\""
-    ), 'unclear'
-    
 def _handle_advice(staff_user):
     """
     Synthesizes a few existing signals into general business advice.
@@ -220,7 +227,7 @@ def _handle_advice(staff_user):
 
     churn = dg.get_highest_churn_risk_customers(limit=2)
     if churn and churn[0].churn_risk_score and churn[0].churn_risk_score >= 0.5:
-        names = ", ".join(s.customer.full_name for s in churn if s.churn_risk_score >= 0.5)
+        names = ", ".join(s.customer.full_name for s in churn if s.churn_risk_score and s.churn_risk_score >= 0.5)
         lines.append(f"- Reach out personally to {names} — they show high churn risk and a check-in could win back their loyalty.")
 
     restock = dg.get_restock_candidates(limit=1)
@@ -231,6 +238,20 @@ def _handle_advice(staff_user):
         lines.append("Everything looks steady right now — no urgent action needed, but keep an eye on trends.")
 
     return "\n".join(lines), 'advice'
+
+
+def _handle_greeting(staff_user):
+    name = staff_user.get_full_name() or staff_user.username
+    return f"Hello {name}! I'm your AI Business Consultant — ask me about restocking, sales, forecasts, customers, credit, delivery, expenses, or the audit ledger, and I'll pull the real numbers for you.", 'greeting'
+
+
+def _handle_unclear(staff_user):
+    return (
+        "I'm not sure I understood that. Try asking things like: "
+        "\"Which products should I restock?\", \"What's today's sales summary?\", "
+        "\"Which customers are at risk of churning?\", or \"Is the blockchain ledger intact?\""
+    ), 'unclear'
+
 
 _INTENT_HANDLERS = {
     'restock_question':      _handle_restock,
@@ -245,9 +266,9 @@ _INTENT_HANDLERS = {
     'delivery_question':     _handle_delivery,
     'expense_question':      _handle_expenses,
     'blockchain_question':   _handle_blockchain,
-    'greeting':               _handle_greeting,
-    'unclear':                _handle_unclear,
     'advice_question':       _handle_advice,
+    'greeting':              _handle_greeting,
+    'unclear':               _handle_unclear,
 }
 
 
