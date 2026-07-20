@@ -39,6 +39,7 @@ _INTENT_PATTERNS = {
     'blockchain_question':   {'blockchain', 'ledger', 'audit', 'tamper'},
     'business_summary':      {'summary', 'briefing', 'business health', 'how am i doing', 'overview'},
     'greeting':              {'hello', 'hi', 'hey', 'good morning', 'good afternoon'},
+    'advice_question':       {'suggest', 'advice', 'recommend', 'increase sales', 'boost sales','grow sales', 'sell more', 'reduce churn', 'improve business', 'what should i do'},
 }
 
 
@@ -198,7 +199,38 @@ def _handle_unclear(staff_user):
         "\"Which products should I restock?\", \"What's today's sales summary?\", "
         "\"Which customers are at risk of churning?\", or \"Is the blockchain ledger intact?\""
     ), 'unclear'
+    
+def _handle_advice(staff_user):
+    """
+    Synthesizes a few existing signals into general business advice.
+    Still zero new logic — purely combines already-built data_gathering
+    functions (top sellers, slow movers, churn risk, restock candidates)
+    into one cohesive response.
+    """
+    lines = ["Here's what I'd focus on right now:"]
 
+    top = dg.get_top_selling_products(limit=2)
+    if top:
+        names = ", ".join(r['product__product_name'] for r in top)
+        lines.append(f"- Keep {names} well-stocked — they're your strongest sellers this week.")
+
+    slow = dg.get_slow_moving_products(limit=2)
+    if slow and slow[0]['quantity_sold'] == 0:
+        lines.append(f"- {slow[0]['product'].product_name} hasn't moved in 30 days — a small promotion or price review could help.")
+
+    churn = dg.get_highest_churn_risk_customers(limit=2)
+    if churn and churn[0].churn_risk_score and churn[0].churn_risk_score >= 0.5:
+        names = ", ".join(s.customer.full_name for s in churn if s.churn_risk_score >= 0.5)
+        lines.append(f"- Reach out personally to {names} — they show high churn risk and a check-in could win back their loyalty.")
+
+    restock = dg.get_restock_candidates(limit=1)
+    if restock:
+        lines.append(f"- Don't let {restock[0]['product'].product_name} run out — restock it soon based on current demand.")
+
+    if len(lines) == 1:
+        lines.append("Everything looks steady right now — no urgent action needed, but keep an eye on trends.")
+
+    return "\n".join(lines), 'advice'
 
 _INTENT_HANDLERS = {
     'restock_question':      _handle_restock,
@@ -215,6 +247,7 @@ _INTENT_HANDLERS = {
     'blockchain_question':   _handle_blockchain,
     'greeting':               _handle_greeting,
     'unclear':                _handle_unclear,
+    'advice_question':       _handle_advice,
 }
 
 
