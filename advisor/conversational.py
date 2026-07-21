@@ -21,6 +21,7 @@ import re
 
 from . import data_gathering as dg
 from .business_health import generate_business_health_summary
+from django.conf import settings
 
 CONVERSATIONAL_VERSION = "v1-rule-based"
 
@@ -273,12 +274,6 @@ _INTENT_HANDLERS = {
 
 
 def process_message(session, staff_user, message_text):
-    """
-    Single entry point, called by the view layer (19f). Logs the staff
-    turn, classifies intent, routes to the correct handler, logs the
-    assistant's reply. Mirrors ai_commerce.conversational.process_message()
-    but staff-scoped.
-    """
     from .models import AdvisorConversationTurn
 
     AdvisorConversationTurn.objects.create(session=session, role='staff', message_text=message_text)
@@ -292,6 +287,14 @@ def process_message(session, staff_user, message_text):
     else:
         handler = _INTENT_HANDLERS.get(intent, _handle_unclear)
         reply_text, routed_to = handler(staff_user)
+
+    provider = getattr(settings, 'AI_PROVIDER', 'rule_based')
+    if provider != 'rule_based' and intent != 'unclear':
+        from .llm_explainer import explain
+        explained = explain(reply_text, message_text)
+        if explained:
+            reply_text = explained
+            routed_to = f"{routed_to}+{provider}"
 
     session.save(update_fields=['context_state', 'last_message_at'])
 

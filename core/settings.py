@@ -154,8 +154,15 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 # system this dissertation is evaluated on. 'gemini' is an optional,
 # documented extension point — see ai_commerce/llm_adapter.py. Flipping
 # this setting is the ONLY way llm_adapter.py ever gets imported at all.
-CONVERSATIONAL_AI_BACKEND = config('CONVERSATIONAL_AI_BACKEND', default='rule_based')
+# --- Centralized AI Provider Abstraction ---------------------------
+# Governs EVERY AI-powered natural-language feature in this project
+# (Conversational Shopping AI, AI Business Advisor). 'rule_based' is
+# the default and keeps the system fully offline-capable. See
+# core/ai_engine.py for the full provider contract.
+AI_PROVIDER = config('AI_PROVIDER', default='rule_based')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 
 # --- AI Demand Forecasting (Step 10, revisited for dissertation demo) --
 # Minimum days of completed sales history required before a real forecast

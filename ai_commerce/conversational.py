@@ -207,8 +207,8 @@ def process_message(session, customer, message_text):
     intent = _classify_intent(message_text)
     session.context_state = _extract_slots(message_text, session.context_state)
 
-    backend = getattr(settings, 'CONVERSATIONAL_AI_BACKEND', 'rule_based')
-    if backend == 'gemini':
+    backend = getattr(settings, 'AI_PROVIDER', 'rule_based')
+    if backend != 'rule_based':
         from .llm_adapter import get_llm_response  # only imported when actually enabled
         reply_text, routed_to = get_llm_response(message_text, session.context_state, customer)
     else:
