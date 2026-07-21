@@ -1,0 +1,68 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}Repay Credit{% endblock %}
+{% block content %}
+<h2 style="font-size:1.4rem; font-weight:700; margin-bottom:1.5rem;">Repay Your Credit Balance</h2>
+
+<div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-header">Your Credit Overview</div>
+    <div class="checkout-card-body">
+        <div class="summary-line"><span>Credit Limit</span><span>Le {{ customer.credit_limit|floatformat:2 }}</span></div>
+        <div class="summary-line"><span>Outstanding Balance</span><span>Le {{ customer.credit_balance|floatformat:2 }}</span></div>
+        <div class="summary-line total"><span>Available Credit</span><span>Le {{ customer.available_credit|floatformat:2 }}</span></div>
+    </div>
+</div>
+
+{% if customer.credit_balance > 0 %}
+<div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-header">Make a Repayment</div>
+    <div class="checkout-card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Amount to Repay (Le)</label>
+                <input type="number" step="0.01" min="0.01" max="{{ customer.credit_balance }}" name="amount" required>
+            </div>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select name="payment_method" required>
+                    {% for value, label in payment_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-primary-modern" style="width:100%; padding:0.75rem;">
+                ✓ Confirm Repayment
+            </button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-body">
+        <p style="color:var(--text-muted);">You have no outstanding credit balance right now.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="checkout-card">
+    <div class="checkout-card-header">Repayment History</div>
+    <div class="checkout-card-body">
+        {% if repayment_history %}
+        <table class="cart-table">
+            <thead><tr><th>Date</th><th>Amount</th><th>Balance After</th></tr></thead>
+            <tbody>
+                {% for r in repayment_history %}
+                <tr>
+                    <td>{{ r.recorded_at|date:"M d, Y H:i" }}</td>
+                    <td>Le {{ r.amount|floatformat:2 }}</td>
+                    <td>Le {{ r.balance_after|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:var(--text-muted);">No repayments recorded yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

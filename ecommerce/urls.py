@@ -25,6 +25,8 @@ urlpatterns = [
     path('order/<int:order_id>/confirm/', views.confirm_order, name='confirm_order'),
     path('orders/', views.order_history, name='order_history'),
     path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
+    path('credit/repay/', views.repay_credit, name='repay_credit'),
+    path('order/<int:order_id>/repay-credit/', views.checkout_repayment, name='checkout_repayment'),
 
     # --- Customer auth ---
     path('register/', views.customer_register, name='register'),

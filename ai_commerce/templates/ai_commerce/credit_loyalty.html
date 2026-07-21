@@ -19,7 +19,18 @@
         <p><strong>Status:</strong> {{ assessment.get_eligibility_status_display }}</p>
         <p style="color:var(--text-secondary);font-size:0.9rem;">{{ assessment.reasoning }}</p>
     </div>
+    <div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-body" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>Outstanding Balance:</strong> Le {{ customer.credit_balance|floatformat:2 }}
+        </div>
+        <a href="{% url 'ecommerce:repay_credit' %}" class="btn-primary-modern" style="padding:0.5rem 1.25rem; text-decoration:none;">
+            Repay Credit
+        </a>
+    </div>
+    </div>
 </div>
+
 
 <div class="checkout-card">
     <div class="checkout-card-header">Reorder Your Favorites</div>

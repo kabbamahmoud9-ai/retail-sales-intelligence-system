@@ -22,7 +22,7 @@ from products.models import Product, Category
 from delivery.models import DeliveryZone
 from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
 from customer_insights.capture import log_search_query, log_category_view, log_product_view
-
+from .credit_repayment_services import process_credit_repayment, PAYMENT_METHOD_CHOICES_FOR_REPAYMENT
 
 # ---------------------------------------------------------------------------
 # Helper — customer session auth
@@ -573,3 +573,68 @@ def order_detail(request, order_id):
         'items':      order.items.select_related('product'),
     }
     return render(request, 'ecommerce/order_detail.html', context)
+
+@customer_login_required
+def repay_credit(request):
+    """
+    Standalone customer-facing credit repayment page —
+    My Account → Credit & Loyalty → Repay Credit.
+    """
+    customer = get_current_customer(request)
+    cart_count = get_cart_count(get_cart(request))
+    repayment_history = customer.credit_repayments.all()[:10]
+
+    if request.method == 'POST':
+        amount = request.POST.get('amount', '').strip()
+        payment_method = request.POST.get('payment_method', '')
+
+        success, message, repayment = process_credit_repayment(
+            customer_id=customer.id,
+            payment_method=payment_method,
+            amount=amount,
+        )
+
+        if success:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+
+        return redirect('ecommerce:repay_credit')
+
+    context = {
+        'customer': customer,
+        'cart_count': cart_count,
+        'repayment_history': repayment_history,
+        'payment_choices': PAYMENT_METHOD_CHOICES_FOR_REPAYMENT,
+    }
+    return render(request, 'ecommerce/repay_credit.html', context)
+
+
+@customer_login_required
+def checkout_repayment(request, order_id):
+    """
+    Optional repayment made alongside a new order's payment step.
+    Completely independent of the order itself — no shared fields, no
+    shared totals — just redirects back to the same payment page after
+    processing. The order's own payment_simulation/confirm_order flow
+    is entirely untouched by this.
+    """
+    if request.method != 'POST':
+        return redirect('ecommerce:payment', order_id=order_id)
+
+    customer = get_current_customer(request)
+    amount = request.POST.get('repayment_amount', '').strip()
+    payment_method = request.POST.get('repayment_payment_method', '')
+
+    if amount:  # only process if the customer actually filled in an amount
+        success, message, repayment = process_credit_repayment(
+            customer_id=customer.id,
+            payment_method=payment_method,
+            amount=amount,
+        )
+        if success:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+
+    return redirect('ecommerce:payment', order_id=order_id)
