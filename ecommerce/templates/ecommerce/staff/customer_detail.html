@@ -43,10 +43,47 @@
             <span style="color:var(--text-muted); font-size:13px;">Outstanding Balance</span>
             <span>Le {{ customer.credit_balance|floatformat:2 }}</span>
         </div>
-        <div style="display:flex; justify-content:space-between;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:{% if latest_credit_assessment %}14px{% else %}0{% endif %};">
             <span style="color:var(--text-muted); font-size:13px;">Available Credit</span>
             <span style="font-weight:600;">Le {{ customer.available_credit|floatformat:2 }}</span>
         </div>
+
+        {% if latest_credit_assessment %}
+        <div style="border-top:1px solid var(--border-color); padding-top:14px; margin-top:4px;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">
+                Latest AI Recommendation ({{ latest_credit_assessment.generated_at|date:"M d, Y" }})
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px;">Recommended Limit</span>
+                <span style="font-weight:600;">Le {{ latest_credit_assessment.recommended_credit_limit|floatformat:2 }}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+                {{ latest_credit_assessment.get_eligibility_status_display }} — {{ latest_credit_assessment.reasoning }}
+            </div>
+           {% if pending_approval %}
+            <form method="post" action="{% url 'approve_credit_recommendation' customer.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary-modern" style="width:100%; padding:8px; font-size:13px;">
+                    <i class="bi bi-check-circle"></i> Approve Le {{ latest_credit_assessment.recommended_credit_limit|floatformat:2 }} Credit Limit
+                </button>
+            </form>
+            {% else %}
+            <span class="badge-modern badge-success" style="font-size:12px;"><i class="bi bi-check-circle-fill"></i> Approved — matches current limit</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if customer.credit_balance > 0 %}
+        <div style="border-top:1px solid var(--border-color); padding-top:14px; margin-top:14px;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Record Repayment</div>
+            <form method="post" action="{% url 'record_credit_repayment' customer.pk %}" style="display:flex; gap:8px;">
+                {% csrf_token %}
+                <input type="number" step="0.01" min="0.01" name="amount" placeholder="Amount (Le)" required
+                       style="flex:1; border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; font-size:13px;">
+                <button type="submit" class="btn-secondary-modern" style="padding:6px 14px; font-size:13px;">Record</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
 
     <div class="card" style="padding:20px;">

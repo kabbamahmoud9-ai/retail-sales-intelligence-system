@@ -6,7 +6,19 @@ view orders, manage customers, and update order statuses.
 
 from django.contrib import admin
 from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
+from .models import CreditRepayment
 
+@admin.register(CreditRepayment)
+class CreditRepaymentAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'amount', 'balance_before', 'balance_after', 'recorded_by', 'recorded_at')
+    search_fields = ('customer__full_name',)
+    readonly_fields = [f.name for f in CreditRepayment._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 class OnlineOrderItemInline(admin.TabularInline):
     model = OnlineOrderItem

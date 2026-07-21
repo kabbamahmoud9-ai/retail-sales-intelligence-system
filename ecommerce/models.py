@@ -459,3 +459,41 @@ class OnlineOrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.unit_price
+
+# ---------------------------------------------------------------------------
+# CreditRepayment
+# ---------------------------------------------------------------------------
+
+class CreditRepayment(models.Model):
+    """
+    Append-only log of a staff-recorded credit repayment. Mirrors the
+    operational-record-plus-blockchain-entry pattern already used for
+    order/payment confirmations: this model supports history/reporting/
+    Metabase, while the corresponding blockchain LedgerEntry is the
+    tamper-evident audit trail. Never edited or deleted after creation.
+
+    Staff-triggered only — there is no real payment gateway in this
+    system (simulate_payment() already stands in for that elsewhere),
+    so a human must attest that repayment actually happened, the same
+    reasoning that makes credit limit approval staff-triggered too.
+    """
+    customer = models.ForeignKey(
+        OnlineCustomer, on_delete=models.CASCADE, related_name='credit_repayments'
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    recorded_by = models.ForeignKey(
+        'accounts.CustomUser', on_delete=models.SET_NULL, null=True,
+        related_name='recorded_credit_repayments'
+    )
+    balance_before = models.DecimalField(max_digits=12, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_hash = models.CharField(max_length=256, blank=True)
+    recorded_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-recorded_at']
+        verbose_name = 'Credit Repayment'
+        verbose_name_plural = 'Credit Repayments'
+
+    def __str__(self):
+        return f"{self.customer.full_name} — Le {self.amount} repaid @ {self.recorded_at:%Y-%m-%d %H:%M}"

@@ -32,6 +32,7 @@ class LedgerEntry(models.Model):
     RECORD_TYPE_CHOICES = [
         ('online_order_confirmation', 'Online Order Confirmation'),
         ('payment_confirmation', 'Payment Confirmation'),
+        ('credit_repayment', 'Credit Repayment'),
         # Future record types (inventory movements, delivery completion,
         # credit approvals, supplier transactions, etc.) can be appended
         # here without changing the model, hashing, or verification logic.
