@@ -49,6 +49,21 @@ MAX_PER_CATEGORY = 3  # prevents one category with many tied-score items
                        # (e.g. a single keyword-matched "chicken" item
                        # getting squeezed out by many "Cooking Oil" items)
 
+
+def _effective_max_recommendations(session):
+    """
+    Scales basket size with family_size when provided — a party of 10
+    reasonably needs more items shown than a party of 1. Falls back to
+    the existing fixed MAX_RECOMMENDATIONS when family_size is unset,
+    so every existing caller (Mode 1, Mode 3, no family_size set) is
+    completely unaffected.
+    """
+    if session.family_size and session.family_size > 4:
+        return min(MAX_RECOMMENDATIONS + 4, 12)
+    return MAX_RECOMMENDATIONS
+
+
+
 _LEMMATIZER = WordNetLemmatizer()
 
 _BUDGET_SIGNAL_WORDS = {"cheap", "affordable", "budget", "save", "cheapest", "inexpensive"}
@@ -244,6 +259,15 @@ def get_candidate_products(session):
     elif session.mode == 'shop_by_goal':
         keywords = _GOAL_KEYWORD_MAP.get(session.goal, [])
 
+# shopping_purpose is free text on ANY mode (not just guided_planner) —
+    # reuse the same dish/occasion -> category bridge already proven for
+    # Mode 1's raw_query, so "birthday party" or "light food" contributes
+    # real category signal instead of being silently ignored.
+    if session.shopping_purpose:
+        categories = list(set(categories) | set(_detect_dish_categories(session.shopping_purpose)))
+        purpose_lemmas = _tokenize_and_lemmatize(session.shopping_purpose)
+        keywords = list(set(keywords) | set(purpose_lemmas))
+
     # Category and keyword matches combine as OR, not AND — a request like
     # "fried rice and chicken" should surface BOTH Rice & Grains category
     # products AND keyword-matched chicken products (in a different
@@ -351,6 +375,11 @@ def _rank_and_explain(session, candidates):
     elif session.mode == 'shop_by_goal':
         keywords = _GOAL_KEYWORD_MAP.get(session.goal, [])
 
+    if session.shopping_purpose:
+        categories = list(set(categories) | set(_detect_dish_categories(session.shopping_purpose)))
+        purpose_lemmas = _tokenize_and_lemmatize(session.shopping_purpose)
+        keywords = list(set(keywords) | set(purpose_lemmas))
+
     quality_preference = _effective_quality_preference(session)
 
     scored = [
@@ -358,10 +387,10 @@ def _rank_and_explain(session, candidates):
         for product in candidates
     ]
     scored.sort(key=lambda item: item[1], reverse=True)
-    return _diversify_by_category(scored)
+    return _diversify_by_category(scored, max_recommendations=_effective_max_recommendations(session))
 
 
-def _diversify_by_category(scored):
+def _diversify_by_category(scored, max_recommendations=MAX_RECOMMENDATIONS):
     """
     Selects the final basket from the score-sorted candidate list, capping
     how many items any single category contributes (MAX_PER_CATEGORY).
@@ -376,7 +405,7 @@ def _diversify_by_category(scored):
     category_counts = Counter()
 
     for product, score, reasoning in scored:
-        if len(selected) >= MAX_RECOMMENDATIONS:
+        if len(selected) >= max_recommendations:
             break
         category_name = product.category.category_name if product.category else 'Uncategorized'
         if category_counts[category_name] < MAX_PER_CATEGORY:
@@ -386,7 +415,7 @@ def _diversify_by_category(scored):
             leftover.append((product, score, reasoning))
 
     for item in leftover:
-        if len(selected) >= MAX_RECOMMENDATIONS:
+        if len(selected) >= max_recommendations:
             break
         selected.append(item)
 
