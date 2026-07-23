@@ -259,3 +259,31 @@ def get_expense_summary(days=7):
 def get_blockchain_status():
     """Thin wrapper over the existing verify_chain() — never reimplemented."""
     return verify_chain()
+
+def get_business_diagnostic_context():
+    """
+    Cross-module aggregator for open-ended 'why'/'how is business doing'
+    questions — pulls a snapshot from sales, expenses, churn, delivery,
+    and forecast confidence into one structured dict. Never computes new
+    business logic itself; purely composes results from the existing
+    single-domain functions above.
+    """
+    sales = get_todays_sales_summary()
+    top_sellers = get_top_selling_products(days=7, limit=3)
+    slow_movers = get_slow_moving_products(days=30, limit=3)
+    forecast = get_forecast_trend_summary()
+    expenses = get_expense_summary(days=30)
+    churn = get_highest_churn_risk_customers(limit=3)
+    delivery = get_delivery_zone_profitability()
+    blockchain = get_blockchain_status()
+
+    return {
+        'todays_sales': sales,
+        'top_sellers_7d': top_sellers,
+        'slow_movers_30d': slow_movers,
+        'forecast_trend': forecast,
+        'expenses_30d': expenses,
+        'highest_churn_risk_customers': churn,
+        'delivery_zone_profitability': delivery[:3] if delivery else [],
+        'blockchain_status': blockchain,
+    }

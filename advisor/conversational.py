@@ -42,6 +42,9 @@ _INTENT_PATTERNS = {
     'advice_question':       {'suggest', 'advice', 'recommend', 'increase sales', 'boost sales',
                                'grow sales', 'sell more', 'reduce churn', 'improve business', 'what should i do'},
     'greeting':              {'hello', 'hi', 'hey', 'good morning', 'good afternoon'},
+    'business_diagnostic': {'why', 'how is business', 'how is the business', 'biggest risk',
+                             'concerning', 'improve retention', 'most valuable', 'costing us',
+                             'what should management', 'focus on this week'},
 }
 
 
@@ -252,7 +255,22 @@ def _handle_unclear(staff_user):
         "\"Which products should I restock?\", \"What's today's sales summary?\", "
         "\"Which customers are at risk of churning?\", or \"Is the blockchain ledger intact?\""
     ), 'unclear'
-
+def _handle_business_diagnostic(staff_user):
+    """
+    Cross-module synthesis for open-ended business questions. Rule-based
+    reply lists the raw facts plainly; the LLM (when active) does the
+    actual synthesis/explanation over this same structured data — see
+    llm_explainer.explain_diagnostic().
+    """
+    context = dg.get_business_diagnostic_context()
+    lines = [
+        f"Today's sales: {context['todays_sales']['total_sales']} sale(s), Le {context['todays_sales']['total_revenue']:,.2f}.",
+        f"Expenses (30 days): Le {context['expenses_30d']['total']:,.2f}.",
+        f"Forecast confidence: {context['forecast_trend']['average_confidence'] or 'N/A'}.",
+        f"Highest churn risk customers: {len(context['highest_churn_risk_customers'])} flagged.",
+        f"Blockchain ledger: {'intact' if context['blockchain_status']['is_valid'] else 'COMPROMISED'}.",
+    ]
+    return "\n".join(lines), 'business_diagnostic', context
 
 _INTENT_HANDLERS = {
     'restock_question':      _handle_restock,
@@ -270,6 +288,7 @@ _INTENT_HANDLERS = {
     'advice_question':       _handle_advice,
     'greeting':              _handle_greeting,
     'unclear':               _handle_unclear,
+    'business_diagnostic':   _handle_business_diagnostic,
 }
 
 
@@ -286,12 +305,20 @@ def process_message(session, staff_user, message_text):
         routed_to = 'business_health'
     else:
         handler = _INTENT_HANDLERS.get(intent, _handle_unclear)
-        reply_text, routed_to = handler(staff_user)
+        result = handler(staff_user)
+        if len(result) == 3:
+            reply_text, routed_to, diagnostic_context = result
+        else:
+            reply_text, routed_to = result
+            diagnostic_context = None
 
     provider = getattr(settings, 'AI_PROVIDER', 'rule_based')
     if provider != 'rule_based' and intent != 'unclear':
         from .llm_explainer import explain
-        explained = explain(reply_text, message_text)
+        if diagnostic_context:
+            explained = explain(reply_text, message_text, structured_context=diagnostic_context)
+        else:
+            explained = explain(reply_text, message_text)
         if explained:
             reply_text = explained
             routed_to = f"{routed_to}+{provider}"
