@@ -234,6 +234,10 @@ class OnlineOrder(models.Model):
     )
     delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD_CHOICES, blank=True)
     delivery_notes = models.TextField(blank=True)
+    customer_confirmed_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp when the customer confirmed receipt via 'I Received My Order'."
+    )
 
     # Populated by simulate_payment() — architecture allows real API swap
     payment_reference = models.CharField(max_length=100, blank=True)
@@ -459,7 +463,71 @@ class OnlineOrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.unit_price
+# ---------------------------------------------------------------------------
+# Product & Delivery Reviews
+# ---------------------------------------------------------------------------
 
+class ProductReview(models.Model):
+    """
+    Customer's rating/review of a specific product from a specific order.
+    Only creatable once delivery_status='delivered' on the order (enforced
+    at the view layer, this model just stores the result). One review per
+    customer+product+order — prevents duplicate/repeated reviews for the
+    same purchase, but allows reviewing the same product again from a
+    DIFFERENT order.
+    """
+    customer = models.ForeignKey(
+        OnlineCustomer, on_delete=models.CASCADE, related_name='product_reviews'
+    )
+    product = models.ForeignKey(
+        'products.Product', on_delete=models.CASCADE, related_name='reviews'
+    )
+    order = models.ForeignKey(
+        OnlineOrder, on_delete=models.CASCADE, related_name='product_reviews'
+    )
+    rating = models.PositiveSmallIntegerField(
+        help_text="1-5 stars"
+    )
+    review_text = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('customer', 'product', 'order')
+        verbose_name = "Product Review"
+        verbose_name_plural = "Product Reviews"
+
+    def __str__(self):
+        return f"{self.customer.full_name} rated {self.product.product_name} {self.rating}/5"
+
+
+class DeliveryReview(models.Model):
+    """
+    Customer's rating/review of the DELIVERY EXPERIENCE for an order —
+    deliberately separate from ProductReview so a customer can rate
+    product quality and delivery experience independently (e.g. great
+    product, poor delivery). One review per customer+order.
+    """
+    customer = models.ForeignKey(
+        OnlineCustomer, on_delete=models.CASCADE, related_name='delivery_reviews'
+    )
+    order = models.ForeignKey(
+        OnlineOrder, on_delete=models.CASCADE, related_name='delivery_review'
+    )
+    rating = models.PositiveSmallIntegerField(
+        help_text="1-5 stars"
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('customer', 'order')
+        verbose_name = "Delivery Review"
+        verbose_name_plural = "Delivery Reviews"
+
+    def __str__(self):
+        return f"{self.customer.full_name} rated delivery for {self.order.order_reference} {self.rating}/5"
 # ---------------------------------------------------------------------------
 # CreditRepayment
 # ---------------------------------------------------------------------------

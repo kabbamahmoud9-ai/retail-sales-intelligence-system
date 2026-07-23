@@ -7,6 +7,7 @@ view orders, manage customers, and update order statuses.
 from django.contrib import admin
 from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
 from .models import CreditRepayment
+from .models import ProductReview, DeliveryReview
 
 @admin.register(CreditRepayment)
 class CreditRepaymentAdmin(admin.ModelAdmin):
@@ -48,3 +49,25 @@ class OnlineOrderAdmin(admin.ModelAdmin):
     search_fields = ('order_reference', 'customer__full_name', 'customer__email')
     readonly_fields = ('order_reference', 'transaction_hash', 'linked_sale', 'created_at', 'updated_at')
     inlines       = [OnlineOrderItemInline]
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'product', 'order', 'rating', 'created_at')
+    list_filter = ('rating',)
+    search_fields = ('customer__full_name', 'product__product_name')
+    readonly_fields = ('customer', 'product', 'order', 'rating', 'review_text', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(DeliveryReview)
+class DeliveryReviewAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'order', 'rating', 'created_at')
+    list_filter = ('rating',)
+    search_fields = ('customer__full_name', 'order__order_reference')
+    readonly_fields = ('customer', 'order', 'rating', 'comment', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
