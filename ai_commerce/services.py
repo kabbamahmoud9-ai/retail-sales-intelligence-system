@@ -131,6 +131,20 @@ def _detect_price_sensitivity(lemmas):
         return 'high'
     return 'medium'
 
+_LIGHT_FOOD_SIGNAL_WORDS = {"light", "snack", "small", "quick"}
+
+
+def _detect_light_food_signal(text):
+    """
+    Detects a 'light food' style request, used to gently de-prioritize
+    (never exclude) generically fuzzy-matched but occasion-unrelated
+    heavy categories in favor of curated occasion categories — e.g. so
+    'light food for my birthday guests' doesn't surface Frozen Chicken
+    ahead of snacks/beverages.
+    """
+    lemmas = set(_tokenize_and_lemmatize(text))
+    return bool(lemmas & _LIGHT_FOOD_SIGNAL_WORDS)
+
 
 def parse_natural_language_query(raw_query):
     """
@@ -176,6 +190,17 @@ _DISH_KEYWORD_CATEGORY_MAP = {
     'salad': ['Fresh Produce', 'Cooking Oil'],
     'breakfast': ['Bread & Bakery', 'Dairy Products', 'Tea & Coffee', 'Beverages'],
     'party': ['Water & Soft Drinks', 'Beverages', 'Biscuits & Snacks', 'Confectionery'],
+    # Step B additions — occasion-to-category bridges, same simple
+    # substring-match philosophy as the entries above.
+    'birthday': ['Water & Soft Drinks', 'Beverages', 'Biscuits & Snacks', 'Confectionery'],
+    'wedding': ['Water & Soft Drinks', 'Beverages', 'Biscuits & Snacks', 'Confectionery'],
+    'graduation': ['Water & Soft Drinks', 'Beverages', 'Biscuits & Snacks', 'Confectionery'],
+    'family gathering': ['Beverages', 'Fresh Produce', 'Rice & Grains', 'Cooking Oil'],
+    'christmas': ['Beverages', 'Confectionery', 'Biscuits & Snacks', 'Bread & Bakery'],
+    'new year': ['Beverages', 'Confectionery', 'Biscuits & Snacks'],
+    'picnic': ['Bread & Bakery', 'Biscuits & Snacks', 'Water & Soft Drinks', 'Confectionery'],
+    'dinner': ['Rice & Grains', 'Cooking Oil', 'Fresh Produce', 'Spices & Seasonings'],
+    'guest': ['Beverages', 'Biscuits & Snacks', 'Fresh Produce'],
 }
 
 
@@ -192,11 +217,13 @@ def _detect_dish_categories(raw_query):
     dishes as the catalog grows.
     """
     query_lower = raw_query.lower()
-    matched_categories = set()
+    matched_categories = []
     for phrase, categories in _DISH_KEYWORD_CATEGORY_MAP.items():
         if phrase in query_lower:
-            matched_categories.update(categories)
-    return list(matched_categories)
+            for cat in categories:
+                if cat not in matched_categories:
+                    matched_categories.append(cat)
+    return matched_categories
 
 
 def _apply_quality_tier_filter(queryset, quality_preference):
@@ -238,6 +265,43 @@ def _effective_quality_preference(session):
         return {'low': 'budget', 'high': 'premium'}.get(sensitivity)
     return None
 
+def _balanced_candidate_pool(combined_queryset, categories, max_candidates=MAX_CANDIDATES):
+    """
+    Ensures every genuinely matched category gets a fair share of the
+    candidate pool, rather than one large category (e.g. a broad "Food"
+    category fuzzy-matched from a single word) crowding out smaller,
+    more specific matches (e.g. occasion-driven categories like
+    Beverages/Confectionery) via arbitrary database ordering, before
+    scoring/diversification ever gets a chance to run. Same "no single
+    category dominates" principle already used by _diversify_by_category
+    on the final ranked list — applied here one step earlier, at
+    candidate retrieval.
+    """
+    if not categories:
+        return list(combined_queryset[:max_candidates])
+
+    per_category_cap = max(3, max_candidates // max(len(categories), 1))
+    seen_ids = set()
+    pool = []
+
+    for category_name in categories:
+        category_items = combined_queryset.filter(category__category_name=category_name)[:per_category_cap]
+        for product in category_items:
+            if product.id not in seen_ids:
+                pool.append(product)
+                seen_ids.add(product.id)
+
+    # Fill any remaining room with whatever's left (covers keyword-only
+    # matches with no category, or categories with fewer than the cap).
+    if len(pool) < max_candidates:
+        for product in combined_queryset:
+            if len(pool) >= max_candidates:
+                break
+            if product.id not in seen_ids:
+                pool.append(product)
+                seen_ids.add(product.id)
+
+    return pool[:max_candidates]
 
 def get_candidate_products(session):
     """
@@ -287,9 +351,6 @@ def get_candidate_products(session):
 
     if categories or keywords:
         combined = (category_matches | keyword_matches).distinct()
-        # Soft fallback: if neither signal matched anything real, fall
-        # through to the full (quality-tier-filtered) queryset below,
-        # rather than returning nothing.
         if combined.exists():
             queryset = combined
 
@@ -297,24 +358,44 @@ def get_candidate_products(session):
     if quality_preference:
         queryset = _apply_quality_tier_filter(queryset, quality_preference)
 
-    return list(queryset.select_related('category').distinct()[:MAX_CANDIDATES])
+    queryset = queryset.select_related('category').distinct()
+    return _balanced_candidate_pool(queryset, categories, max_candidates=MAX_CANDIDATES)
 
 
-def _score_and_explain_one(session, product, categories, keywords, quality_preference):
+def _score_and_explain_one(session, product, categories, keywords, quality_preference,
+                            occasion_categories=None, light_food_signal=False):
     """
     Scores a single candidate product and generates its explanation.
     Weighted-factor formula, same rule-based-transparency spirit as
     calculate_trust_score(). Returns (score, reasoning).
+
+    occasion_matched (curated, e.g. "birthday" -> Beverages) is checked
+    BEFORE category_matched (generic fuzzy word match) and scores higher
+    — this is the fix for occasion-detected products losing arbitrary
+    ties against accidentally-fuzzy-matched categories.
     """
+    occasion_categories = occasion_categories or []
     score = 0.0
     reasons = []
     relevance_found = False
 
-    category_matched = bool(product.category and product.category.category_name in categories)
-    if category_matched:
-        score += 3
+    category_name = product.category.category_name if product.category else None
+    occasion_matched = bool(category_name and category_name in occasion_categories)
+    category_matched = bool(category_name and category_name in categories)
+
+    if occasion_matched:
+        position = occasion_categories.index(category_name)
+        score += max(5 - position, 2)  # 1st category +5, 2nd +4, 3rd +3, floor +2
         relevance_found = True
-        reasons.append(f"matches your interest in {product.category.category_name}")
+        reasons.append(f"is a great fit for the occasion you mentioned ({category_name})")
+        if light_food_signal:
+            score += 1
+    elif category_matched:
+        score += 2
+        relevance_found = True
+        reasons.append(f"matches your interest in {category_name}")
+        if light_food_signal:
+            score -= 2  # de-prioritized, not excluded — still a valid catalogue option
 
     product_lemmas = set(_tokenize_and_lemmatize(product.product_name))
     matched_keywords = product_lemmas & set(keywords)
@@ -348,8 +429,6 @@ def _score_and_explain_one(session, product, categories, keywords, quality_prefe
         reasons.append("is well-stocked and ready to ship")
 
     if not relevance_found:
-        # Honest fallback: no category/keyword match exists in the catalog
-        # for this request, so don't imply relevance that isn't there.
         fallback_reasons = reasons if reasons else ["is currently in stock"]
         reasoning = (
             "No close match for your request was found in our catalog, so "
@@ -360,15 +439,10 @@ def _score_and_explain_one(session, product, categories, keywords, quality_prefe
     reasoning = "Recommended because it " + ", and ".join(reasons) + "."
     return score, reasoning
 
-
 def _rank_and_explain(session, candidates):
-    """
-    The swappable ranking/explanation seam. Scores every candidate, sorts
-    descending, returns (product, score, reasoning) tuples for the top
-    MAX_RECOMMENDATIONS.
-    """
     categories = []
     keywords = []
+
     if session.mode == 'natural_language' and session.parsed_intent:
         categories = session.parsed_intent.get('categories', [])
         keywords = session.parsed_intent.get('keywords', [])
@@ -376,20 +450,53 @@ def _rank_and_explain(session, candidates):
         keywords = _GOAL_KEYWORD_MAP.get(session.goal, [])
 
     if session.shopping_purpose:
-        categories = list(set(categories) | set(_detect_dish_categories(session.shopping_purpose)))
+        categories = list(set(categories) | set(
+            _detect_dish_categories(session.shopping_purpose)
+        ))
         purpose_lemmas = _tokenize_and_lemmatize(session.shopping_purpose)
         keywords = list(set(keywords) | set(purpose_lemmas))
+
+    # Detect "light food", "snacks", "quick food", etc.
+    # from both the original message and shopping purpose.
+    light_food_signal = _detect_light_food_signal(
+        f"{session.raw_query or ''} {session.shopping_purpose or ''}"
+    )
+
+    # Recomputed independently from CURATED dish/occasion detection only.
+    occasion_categories = list(
+        _detect_dish_categories(session.raw_query or '')
+    )
+
+    if session.shopping_purpose:
+        for cat in _detect_dish_categories(session.shopping_purpose):
+            if cat not in occasion_categories:
+                occasion_categories.append(cat)
 
     quality_preference = _effective_quality_preference(session)
 
     scored = [
-        (product, *_score_and_explain_one(session, product, categories, keywords, quality_preference))
+        (
+            product,
+            *_score_and_explain_one(
+                session,
+                product,
+                categories,
+                keywords,
+                quality_preference,
+                occasion_categories=occasion_categories,
+                light_food_signal=light_food_signal,
+            )
+        )
         for product in candidates
     ]
+
     scored.sort(key=lambda item: item[1], reverse=True)
-    return _diversify_by_category(scored, max_recommendations=_effective_max_recommendations(session))
 
-
+    return _diversify_by_category(
+        scored,
+        max_recommendations=_effective_max_recommendations(session)
+    )
+    
 def _diversify_by_category(scored, max_recommendations=MAX_RECOMMENDATIONS):
     """
     Selects the final basket from the score-sorted candidate list, capping

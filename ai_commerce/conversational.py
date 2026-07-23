@@ -80,7 +80,29 @@ _WORD_NUMBERS = {
     'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
     'eleven': 11, 'twelve': 12,
 }
+_OCCASION_TRIGGER_PHRASES = {
+    'birthday', 'party', 'wedding', 'graduation', 'family gathering',
+    'gathering', 'christmas', 'new year', 'picnic', 'dinner', 'breakfast',
+    'guest', 'visitor',
+}
 
+
+def _detect_occasion_mention(message_text):
+    """
+    Order-independent, prefix-based phrase matching — same approach
+    already proven in advisor/conversational.py's _classify_intent, so
+    plurals ("guests") and reordered phrasing are handled without
+    needing an explicit variant for every word form. Deliberately
+    conservative: only returns True on an actual occasion word, so
+    ambiguous messages like "I need some food" are correctly left alone.
+    """
+    raw_tokens = re.findall(r'[a-z]+', message_text.lower())
+
+    def _phrase_matches(phrase):
+        words = phrase.split()
+        return all(any(token.startswith(word) for token in raw_tokens) for word in words)
+
+    return any(_phrase_matches(phrase) for phrase in _OCCASION_TRIGGER_PHRASES)
 
 def _extract_slots(message_text, context_state):
     """
@@ -107,6 +129,14 @@ def _extract_slots(message_text, context_state):
                 updated['family_size'] = number
                 break
 
+    # Only updates shopping_purpose when THIS message actually mentions
+    # an occasion — same "never overwrite with nothing" discipline as
+    # budget/family_size above, so a later message with no occasion
+    # words (e.g. just restating a number) doesn't erase context
+    # established earlier in the conversation.
+    if _detect_occasion_mention(message_text):
+        updated['shopping_purpose'] = message_text
+
     return updated
 
 # ---------------------------------------------------------------------------
@@ -130,6 +160,7 @@ def _handle_shopping_query(customer, message_text, context_state):
         parsed_intent=parsed_intent,
         budget=context_state.get('budget'),
         family_size=context_state.get('family_size'),
+        shopping_purpose=context_state.get('shopping_purpose', ''),
     )
 
     recommendations = generate_shopping_recommendations(session)
