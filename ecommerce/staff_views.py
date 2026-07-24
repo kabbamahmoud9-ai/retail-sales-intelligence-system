@@ -184,7 +184,9 @@ def delivery_order_list(request):
     """
     orders = OnlineOrder.objects.filter(
         status__in=['confirmed', 'delivered']
-    ).select_related('customer', 'delivery_zone').order_by('-order_date')
+    ).select_related('customer', 'delivery_zone').prefetch_related(
+        'product_reviews', 'delivery_review'
+    ).order_by('-order_date')
 
     status_filter = request.GET.get('delivery_status', '')
     if status_filter:

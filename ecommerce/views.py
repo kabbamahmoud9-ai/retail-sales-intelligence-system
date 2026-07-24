@@ -13,16 +13,17 @@ Cart strategy:
     { product_id (str): { 'quantity': int, 'name': str, 'price': str } }
   - No database writes until checkout — fast and works without login
 """
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
+from django.utils import timezone
 
 from products.models import Product, Category
 from delivery.models import DeliveryZone
-from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem
+from .models import OnlineCustomer, OnlineOrder, OnlineOrderItem, ProductReview, DeliveryReview
 from customer_insights.capture import log_search_query, log_category_view, log_product_view
 from .credit_repayment_services import process_credit_repayment, PAYMENT_METHOD_CHOICES_FOR_REPAYMENT
+
 
 # ---------------------------------------------------------------------------
 # Helper — customer session auth
@@ -558,21 +559,144 @@ def order_history(request):
     }
     return render(request, 'ecommerce/order_history.html', context)
 
-
 @customer_login_required
 def order_detail(request, order_id):
-    """Detail view for a single customer order."""
-    customer   = get_current_customer(request)
-    order      = get_object_or_404(OnlineOrder, id=order_id, customer=customer)
+    """Detail view for a single customer order — now includes delivery
+    tracking, confirmation, and review status."""
+    customer = get_current_customer(request)
+    order = get_object_or_404(OnlineOrder, id=order_id, customer=customer)
     cart_count = get_cart_count(get_cart(request))
+    items = order.items.select_related('product')
+
+    # Delivery tracking steps — purely derived display data, no new
+    # model, reads the SAME order.status/delivery_status/customer_confirmed_at
+    # fields staff already write to. This IS the "two-way sync": there's
+    # no separate sync mechanism because there was never a second copy
+    # of the data — customer and staff have always read the same row.
+    tracking_steps = [
+        {'label': 'Order Confirmed', 'done': order.status in ('confirmed', 'processing', 'shipped', 'delivered')},
+        {'label': 'Assigned', 'done': order.delivery_status in ('assigned', 'in_transit', 'delivered')},
+        {'label': 'In Transit', 'done': order.delivery_status in ('in_transit', 'delivered')},
+        {'label': 'Delivered', 'done': order.delivery_status == 'delivered'},
+        {'label': 'Customer Confirmed', 'done': order.customer_confirmed_at is not None},
+    ]
+
+    can_review = order.delivery_status == 'delivered'
+    existing_delivery_review = DeliveryReview.objects.filter(order=order, customer=customer).first()
+    reviewed_product_ids = set(
+        ProductReview.objects.filter(order=order, customer=customer).values_list('product_id', flat=True)
+    )
 
     context = {
-        'order':      order,
-        'customer':   customer,
+        'order': order,
+        'customer': customer,
         'cart_count': cart_count,
-        'items':      order.items.select_related('product'),
+        'items': items,
+        'tracking_steps': tracking_steps,
+        'can_review': can_review,
+        'existing_delivery_review': existing_delivery_review,
+        'reviewed_product_ids': reviewed_product_ids,
     }
     return render(request, 'ecommerce/order_detail.html', context)
+
+
+@customer_login_required
+def confirm_delivery(request, order_id):
+    """Customer-triggered 'I Received My Order'. Only valid when
+    delivery_status == 'delivered' — the sole authoritative trigger,
+    per explicit project decision."""
+    if request.method != 'POST':
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    customer = get_current_customer(request)
+    order = get_object_or_404(OnlineOrder, id=order_id, customer=customer)
+
+    if order.delivery_status != 'delivered':
+        messages.error(request, "This order hasn't been marked as delivered yet.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    if not order.customer_confirmed_at:
+        order.customer_confirmed_at = timezone.now()
+        order.save(update_fields=['customer_confirmed_at'])
+        messages.success(request, "Thanks for confirming! You can now leave a review if you'd like.")
+    return redirect('ecommerce:order_detail', order_id=order_id)
+
+
+@customer_login_required
+def submit_product_review(request, order_id, product_id):
+    """One review per customer+product+order — DB-level unique_together
+    is the real enforcement; this view's existence-check just gives a
+    friendly message instead of a raw IntegrityError."""
+    if request.method != 'POST':
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    customer = get_current_customer(request)
+    order = get_object_or_404(OnlineOrder, id=order_id, customer=customer)
+
+    if order.delivery_status != 'delivered':
+        messages.error(request, "You can only review products from delivered orders.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    # Enforces "did not purchase" prevention — product must actually be
+    # a line item on THIS order, not just any product in the catalogue.
+    order_item = get_object_or_404(OnlineOrderItem, order=order, product_id=product_id)
+
+    if ProductReview.objects.filter(customer=customer, product=order_item.product, order=order).exists():
+        messages.error(request, "You've already reviewed this product for this order.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    try:
+        rating = int(request.POST.get('rating', ''))
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except (ValueError, TypeError):
+        messages.error(request, "Please select a rating between 1 and 5 stars.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    ProductReview.objects.create(
+        customer=customer,
+        product=order_item.product,
+        order=order,
+        rating=rating,
+        review_text=request.POST.get('review_text', '').strip(),
+    )
+    messages.success(request, f"Thanks for reviewing {order_item.product.product_name}!")
+    return redirect('ecommerce:order_detail', order_id=order_id)
+
+
+@customer_login_required
+def submit_delivery_review(request, order_id):
+    """One delivery review per customer+order."""
+    if request.method != 'POST':
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    customer = get_current_customer(request)
+    order = get_object_or_404(OnlineOrder, id=order_id, customer=customer)
+
+    if order.delivery_status != 'delivered':
+        messages.error(request, "You can only review delivery for delivered orders.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    if DeliveryReview.objects.filter(customer=customer, order=order).exists():
+        messages.error(request, "You've already reviewed the delivery for this order.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    try:
+        rating = int(request.POST.get('rating', ''))
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except (ValueError, TypeError):
+        messages.error(request, "Please select a rating between 1 and 5 stars.")
+        return redirect('ecommerce:order_detail', order_id=order_id)
+
+    DeliveryReview.objects.create(
+        customer=customer,
+        order=order,
+        rating=rating,
+        comment=request.POST.get('comment', '').strip(),
+    )
+    messages.success(request, "Thanks for rating your delivery experience!")
+    return redirect('ecommerce:order_detail', order_id=order_id)
 
 @customer_login_required
 def repay_credit(request):

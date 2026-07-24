@@ -14,13 +14,68 @@
         </span>
     </div>
 
+    <!-- Delivery Tracking -->
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; margin-bottom:1.25rem;">
+        <h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:1rem;">Delivery Tracking</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+            {% for step in tracking_steps %}
+            <span class="badge-modern {% if step.done %}badge-success{% else %}{% endif %}" style="{% if not step.done %}background:var(--bg-secondary); color:var(--text-muted);{% endif %}">
+                {% if step.done %}✓{% endif %} {{ step.label }}
+            </span>
+            {% endfor %}
+        </div>
+
+        {% if order.delivery_status == 'failed' %}
+        <div style="margin-top:1rem; padding:0.85rem 1rem; background:#fee2e2; border-left:4px solid #ef4444; border-radius:var(--radius-md); font-size:0.85rem; color:#991b1b;">
+            <strong>Delivery Failed.</strong>
+            {% if order.delivery_notes %}{{ order.delivery_notes }}{% else %}Please contact us for details.{% endif %}
+        </div>
+        {% endif %}
+
+        {% if order.delivery_status == 'delivered' and not order.customer_confirmed_at %}
+        <form method="post" action="{% url 'ecommerce:confirm_delivery' order.id %}" style="margin-top:1rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary-modern" style="padding:0.6rem 1.5rem;">
+                ✓ I Received My Order
+            </button>
+        </form>
+        {% elif order.customer_confirmed_at %}
+        <p style="margin-top:1rem; font-size:0.85rem; color:var(--text-muted);">
+            You confirmed receipt on {{ order.customer_confirmed_at|date:"d M Y, H:i" }}.
+        </p>
+        {% endif %}
+    </div>
+
     <!-- Items -->
     <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; margin-bottom:1.25rem;">
         <h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:1rem;">Items</h3>
         {% for item in items %}
-        <div style="display:flex; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--border-color); font-size:0.9rem;">
-            <span>{{ item.product.name }} × {{ item.quantity }}</span>
-            <span style="font-weight:500;">Le {{ item.subtotal|floatformat:2 }}</span>
+        <div style="padding:0.75rem 0; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                <span>{{ item.product.product_name }} × {{ item.quantity }}</span>
+                <span style="font-weight:500;">Le {{ item.subtotal|floatformat:2 }}</span>
+            </div>
+
+            {% if can_review %}
+                {% if item.product.id in reviewed_product_ids %}
+                <p style="font-size:0.78rem; color:var(--success); margin-top:0.4rem;">✓ You've reviewed this product</p>
+                {% else %}
+                <form method="post" action="{% url 'ecommerce:submit_product_review' order.id item.product.id %}" style="margin-top:0.5rem; background:var(--bg-secondary); padding:0.75rem; border-radius:var(--radius-md);">
+                    {% csrf_token %}
+                    <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">Rate this product</label>
+                    <select name="rating" required style="margin-bottom:0.4rem;">
+                        <option value="">Select rating</option>
+                        <option value="5">★★★★★ (5)</option>
+                        <option value="4">★★★★ (4)</option>
+                        <option value="3">★★★ (3)</option>
+                        <option value="2">★★ (2)</option>
+                        <option value="1">★ (1)</option>
+                    </select>
+                    <textarea name="review_text" placeholder="Optional review..." rows="2" style="width:100%; margin-bottom:0.4rem;"></textarea>
+                    <button type="submit" class="btn-secondary-modern" style="padding:0.4rem 1rem; font-size:0.8rem;">Submit Review</button>
+                </form>
+                {% endif %}
+            {% endif %}
         </div>
         {% endfor %}
         <div style="display:flex; justify-content:space-between; font-weight:700; margin-top:0.75rem; font-size:1rem;">
@@ -28,6 +83,31 @@
             <span style="color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</span>
         </div>
     </div>
+
+    <!-- Delivery Review -->
+    {% if can_review %}
+    <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; margin-bottom:1.25rem;">
+        <h3 style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:1rem;">Delivery Experience</h3>
+        {% if existing_delivery_review %}
+        <p style="font-size:0.9rem;">You rated this delivery {{ existing_delivery_review.rating }}/5 stars.</p>
+        {% if existing_delivery_review.comment %}<p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.4rem;">"{{ existing_delivery_review.comment }}"</p>{% endif %}
+        {% else %}
+        <form method="post" action="{% url 'ecommerce:submit_delivery_review' order.id %}">
+            {% csrf_token %}
+            <select name="rating" required style="margin-bottom:0.5rem;">
+                <option value="">Select rating</option>
+                <option value="5">★★★★★ (5)</option>
+                <option value="4">★★★★ (4)</option>
+                <option value="3">★★★ (3)</option>
+                <option value="2">★★ (2)</option>
+                <option value="1">★ (1)</option>
+            </select>
+            <textarea name="comment" placeholder="Optional comment about the delivery..." rows="2" style="width:100%; margin-bottom:0.5rem;"></textarea>
+            <button type="submit" class="btn-secondary-modern" style="padding:0.5rem 1.25rem;">Rate Delivery</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Payment & delivery -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem;">

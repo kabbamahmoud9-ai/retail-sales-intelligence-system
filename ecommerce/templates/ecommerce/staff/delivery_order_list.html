@@ -24,8 +24,8 @@
 </div>
 
 <div class="card">
-    <div class="table-wrapper">
-        <table class="modern-table">
+    <div class="table-wrapper" style="overflow-x:auto;">
+        <table class="modern-table" style="min-width:1100px;">
             <thead>
                 <tr>
                     <th>Order Ref</th>
@@ -33,6 +33,9 @@
                     <th>Zone</th>
                     <th>Delivery Fee</th>
                     <th>Delivery Status</th>
+                    <th>Customer Confirmed</th>
+                    <th>Product Reviews</th>
+                    <th>Delivery Review</th>
                     <th>Update</th>
                 </tr>
             </thead>
@@ -57,9 +60,40 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form method="POST" action="{% url 'delivery_order_update' order.pk %}" style="display:flex; gap:6px;">
+                        {% if order.customer_confirmed_at %}
+                            <span class="badge-modern badge-success" title="{{ order.customer_confirmed_at|date:'d M Y, H:i' }}">
+                                <i class="bi bi-check-circle-fill"></i> {{ order.customer_confirmed_at|date:"d M Y" }}
+                            </span>
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:12px;">Not yet</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% with reviews=order.product_reviews.all %}
+                        {% if reviews %}
+                            {% for r in reviews %}
+                            <div style="font-size:12px; margin-bottom:4px;" title="{{ r.review_text }}">
+                                {{ r.product.product_name|truncatechars:20 }} — {{ r.rating }}★
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:12px;">—</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% with dr=order.delivery_review.first %}
+                        {% if dr %}
+                            <span style="font-size:12px;" title="{{ dr.comment }}">{{ dr.rating }}★</span>
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:12px;">—</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'delivery_order_update' order.pk %}" style="display:flex; gap:6px; min-width:180px;">
                             {% csrf_token %}
-                            <select name="delivery_status" style="padding:0.4rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:12px;">
+                            <select name="delivery_status" style="padding:0.4rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:12px; min-width:140px;">
                                 {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if order.delivery_status == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
@@ -71,7 +105,7 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6">
+                <tr><td colspan="9">
                     <div class="empty-state">
                         <i class="bi bi-truck"></i>
                         <p>No confirmed orders to manage yet</p>
