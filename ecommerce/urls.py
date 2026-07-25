@@ -34,4 +34,9 @@ urlpatterns = [
     path('register/', views.customer_register, name='register'),
     path('login/', views.customer_login, name='login'),
     path('logout/', views.customer_logout, name='logout'),
+
+    path('profile/', views.profile, name='profile'),
+    path('profile/change-password/', views.change_password, name='change_password'),
+    path('profile/reviews/', views.my_reviews, name='my_reviews'),
+    path('profile/remove-picture/', views.remove_profile_picture, name='remove_profile_picture'),
 ]

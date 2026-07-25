@@ -762,3 +762,95 @@ def checkout_repayment(request, order_id):
             messages.error(request, message)
 
     return redirect('ecommerce:payment', order_id=order_id)
+
+@customer_login_required
+def profile(request):
+    """Customer profile view/edit + avatar upload."""
+    customer = get_current_customer(request)
+    cart_count = get_cart_count(get_cart(request))
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        phone = request.POST.get('phone', '').strip()
+
+        if not full_name or not email:
+            messages.error(request, "Full name and email are required.")
+        elif OnlineCustomer.objects.exclude(id=customer.id).filter(email=email).exists():
+            messages.error(request, "An account with this email already exists.")
+        else:
+            customer.full_name = full_name
+            customer.email = email
+            customer.phone = phone
+            if 'profile_picture' in request.FILES:
+                customer.profile_picture = request.FILES['profile_picture']
+            customer.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect('ecommerce:profile')
+
+    context = {'customer': customer, 'cart_count': cart_count}
+    return render(request, 'ecommerce/profile.html', context)
+
+
+@customer_login_required
+def change_password(request):
+    """Customer password change — reuses OnlineCustomer.set_password()/check_password()."""
+    customer = get_current_customer(request)
+    cart_count = get_cart_count(get_cart(request))
+
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        if not customer.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+        elif len(new_password) < 6:
+            messages.error(request, "New password must be at least 6 characters.")
+        elif new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+        else:
+            customer.set_password(new_password)
+            customer.save()
+            messages.success(request, "Password changed successfully.")
+            return redirect('ecommerce:profile')
+
+    context = {'customer': customer, 'cart_count': cart_count}
+    return render(request, 'ecommerce/change_password.html', context)
+
+
+@customer_login_required
+def my_reviews(request):
+    """Lists all product + delivery reviews the customer has submitted."""
+    customer = get_current_customer(request)
+    cart_count = get_cart_count(get_cart(request))
+
+    product_reviews = customer.product_reviews.select_related('product', 'order').all()
+    delivery_reviews = customer.delivery_reviews.select_related('order').all()
+
+    context = {
+        'customer': customer,
+        'cart_count': cart_count,
+        'product_reviews': product_reviews,
+        'delivery_reviews': delivery_reviews,
+    }
+    return render(request, 'ecommerce/my_reviews.html', context)
+
+@customer_login_required
+def remove_profile_picture(request):
+    """
+    Clears the customer's profile_picture, deleting the actual file
+    from storage (not just the DB reference) so it doesn't linger as an
+    orphaned file. Only removes the picture — never touches any other
+    account field, so the account itself is completely unaffected.
+    """
+    if request.method != 'POST':
+        return redirect('ecommerce:profile')
+
+    customer = get_current_customer(request)
+    if customer.profile_picture:
+        customer.profile_picture.delete(save=False)  # removes the file from storage
+        customer.profile_picture = None
+        customer.save(update_fields=['profile_picture'])
+        messages.success(request, "Profile picture removed. Using default avatar.")
+    return redirect('ecommerce:profile')

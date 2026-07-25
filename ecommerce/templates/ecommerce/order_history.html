@@ -5,7 +5,7 @@
 <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:1.5rem;">My Orders</h2>
 
 {% if orders %}
-<div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); overflow:hidden;">
+<div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); overflow-x:auto;">
     <table class="cart-table">
         <thead>
             <tr>
@@ -29,14 +29,16 @@
                 <td>
                     <span class="order-status-badge status-{{ order.status }}">{{ order.status }}</span>
                 </td>
-             <td style="display:flex; gap:8px; align-items:center;">
-                 <a href="{% url 'ecommerce:order_detail' order.id %}" style="color:var(--primary-color); font-size:0.85rem; text-decoration:none;">View →</a>
-                {% if order.status == 'pending' %}
-                 <a href="{% url 'ecommerce:payment' order.id %}" style="font-size:0.82rem; background:#EFF6FF; color:#2563EB; padding:3px 10px; border-radius:20px; text-decoration:none; font-weight:600; border:1px solid #BFDBFE;">
-                 Complete Payment
-                 </a>
-    {% endif %}
-            </td>
+             <td>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <a href="{% url 'ecommerce:order_detail' order.id %}" class="btn-secondary-modern" style="padding:0.35rem 0.9rem; font-size:0.82rem; text-decoration:none;">View</a>
+                        {% if order.status == 'pending' %}
+                        <a href="{% url 'ecommerce:payment' order.id %}" style="font-size:0.82rem; background:#EFF6FF; color:#2563EB; padding:3px 10px; border-radius:20px; text-decoration:none; font-weight:600; border:1px solid #BFDBFE;">
+                            Complete Payment
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

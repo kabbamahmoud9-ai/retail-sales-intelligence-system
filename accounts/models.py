@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
         ('staff', 'Staff'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
+    profile_picture = models.ImageField(upload_to='staff_avatars/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"

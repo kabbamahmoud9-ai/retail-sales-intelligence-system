@@ -1,0 +1,57 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}My Account{% endblock %}
+{% block content %}
+<h2 style="font-size:1.4rem; font-weight:700; margin-bottom:1.5rem;">My Account</h2>
+
+<div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+    <div style="flex:0 0 200px;">
+        <div style="background:var(--bg-primary); border-radius:var(--radius-lg); border:1px solid var(--border-color); padding:1.5rem; text-align:center;">
+            {% if customer.profile_picture %}
+                <img src="{{ customer.profile_picture.url }}" alt="Profile picture" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom:0.5rem;">
+                <form method="post" action="{% url 'ecommerce:remove_profile_picture' %}" style="margin-bottom:0.75rem;">
+                    {% csrf_token %}
+                    <button type="submit" style="background:none; border:none; color:var(--danger); font-size:0.78rem; cursor:pointer; text-decoration:underline; padding:0;">Remove Photo</button>
+                </form>
+            {% else %}
+                <div style="width:100px; height:100px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; font-size:2.5rem; margin:0 auto 0.75rem;">👤</div>
+            {% endif %}
+            <p style="font-weight:600; font-size:0.95rem;">{{ customer.full_name }}</p>
+            <p style="color:var(--text-muted); font-size:0.8rem;">{{ customer.email }}</p>
+
+            <div style="margin-top:1rem; text-align:left;">
+                <a href="{% url 'ecommerce:order_history' %}" style="display:block; padding:0.5rem 0; color:var(--text-secondary); font-size:0.85rem; text-decoration:none;">📦 My Orders</a>
+                <a href="{% url 'ecommerce:my_reviews' %}" style="display:block; padding:0.5rem 0; color:var(--text-secondary); font-size:0.85rem; text-decoration:none;">⭐ My Reviews</a>
+                <a href="{% url 'ecommerce:change_password' %}" style="display:block; padding:0.5rem 0; color:var(--text-secondary); font-size:0.85rem; text-decoration:none;">🔒 Change Password</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="flex:1; min-width:280px;">
+        <div class="checkout-card">
+            <div class="checkout-card-header">Profile Information</div>
+            <div class="checkout-card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <input type="file" name="profile_picture" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" value="{{ customer.full_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" value="{{ customer.email }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" value="{{ customer.phone }}">
+                    </div>
+                    <button type="submit" class="btn-primary-modern" style="padding:0.65rem 1.5rem;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

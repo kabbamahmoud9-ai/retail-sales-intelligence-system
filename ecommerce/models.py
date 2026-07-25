@@ -53,6 +53,7 @@ class OnlineCustomer(models.Model):
 
     is_active       = models.BooleanField(default=True)
     created_at      = models.DateTimeField(auto_now_add=True)
+    profile_picture = models.ImageField(upload_to='customer_avatars/', null=True, blank=True)
 
     # --- Customer intelligence (Step 11) --------------------------------
     lifetime_spending = models.DecimalField(

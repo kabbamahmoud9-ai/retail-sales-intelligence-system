@@ -454,8 +454,16 @@ body {
             <a href="{% url 'ecommerce:order_history' %}">My Orders</a>
             <a href="{% url 'ai_commerce:home' %}">AI Assistant</a>
             <a href="{% url 'ai_commerce:credit_loyalty' %}">Credit & Loyalty</a>
+            <a href="{% url 'ecommerce:profile' %}">My Account</a>
             <a href="{% url 'ecommerce:logout' %}">Logout</a>
-            <span style="color: var(--text-muted); font-size:0.85rem;">Hi, {{ customer.full_name|truncatechars:15 }}</span>
+            <a href="{% url 'ecommerce:profile' %}" style="display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:0.85rem; text-decoration:none;">
+                {% if customer.profile_picture %}
+                    <img src="{{ customer.profile_picture.url }}" alt="Profile" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
+                {% else %}
+                    <span style="width:24px; height:24px; border-radius:50%; background:var(--bg-secondary); display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:600;">{{ customer.full_name|first|upper }}</span>
+                {% endif %}
+                Hi, {{ customer.full_name|truncatechars:15 }}
+            </a>
         {% else %}
             <a href="{% url 'ecommerce:login' %}">Login</a>
             <a href="{% url 'ecommerce:register' %}" class="btn-primary-modern" style="padding:0.4rem 1rem; font-size:0.85rem;">Register</a>

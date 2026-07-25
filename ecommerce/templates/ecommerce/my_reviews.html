@@ -1,0 +1,45 @@
+{% extends 'ecommerce/base_store.html' %}
+{% block title %}My Reviews{% endblock %}
+{% block content %}
+<h2 style="font-size:1.4rem; font-weight:700; margin-bottom:1.5rem;">My Reviews</h2>
+
+<div class="checkout-card" style="margin-bottom:1.5rem;">
+    <div class="checkout-card-header">Product Reviews</div>
+    <div class="checkout-card-body">
+        {% if product_reviews %}
+            {% for r in product_reviews %}
+            <div style="padding:0.75rem 0; border-bottom:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-weight:600; font-size:0.9rem;">{{ r.product.product_name }}</span>
+                    <span>{{ r.rating }}★</span>
+                </div>
+                {% if r.review_text %}<p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">{{ r.review_text }}</p>{% endif %}
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">Order {{ r.order.order_reference }} · {{ r.created_at|date:"d M Y" }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:var(--text-muted);">You haven't reviewed any products yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="checkout-card">
+    <div class="checkout-card-header">Delivery Reviews</div>
+    <div class="checkout-card-body">
+        {% if delivery_reviews %}
+            {% for r in delivery_reviews %}
+            <div style="padding:0.75rem 0; border-bottom:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-weight:600; font-size:0.9rem;">Order {{ r.order.order_reference }}</span>
+                    <span>{{ r.rating }}★</span>
+                </div>
+                {% if r.comment %}<p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">{{ r.comment }}</p>{% endif %}
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">{{ r.created_at|date:"d M Y" }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:var(--text-muted);">You haven't reviewed any deliveries yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
