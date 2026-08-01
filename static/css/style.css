@@ -701,9 +701,44 @@ input[type=date]:focus, textarea:focus {
     box-shadow: none;
 }
 
+/* ===== HAMBURGER MENU (mobile) ===== */
+.hamburger-btn {
+    display: none;
+    width: 38px; height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: white;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    position: fixed;
+    top: 13px;
+    left: 14px;
+    z-index: 1100;
+    box-shadow: var(--shadow-sm);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
     .main-wrapper { margin-left: 0; }
-}
+
+    .hamburger-btn { display: flex !important; }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 999;
+    }
+    
+
+    .notif-panel { width: 100vw; }
+
+    .page-content { padding: 16px; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .topbar { padding: 0 14px; }

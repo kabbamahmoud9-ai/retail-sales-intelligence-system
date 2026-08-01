@@ -44,7 +44,9 @@ _INTENT_PATTERNS = {
     'greeting':              {'hello', 'hi', 'hey', 'good morning', 'good afternoon'},
     'business_diagnostic': {'why', 'how is business', 'how is the business', 'biggest risk',
                              'concerning', 'improve retention', 'most valuable', 'costing us',
-                             'what should management', 'focus on this week'},
+                             'what should management', 'focus on this week', 'compared with',
+                             'compared to', 'last month', 'this month', 'increasing', 'decreasing',
+                             'what has changed', 'lower than', 'higher than'},
 }
 
 

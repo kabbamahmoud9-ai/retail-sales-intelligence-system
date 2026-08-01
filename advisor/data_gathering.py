@@ -6,10 +6,6 @@ Every function here is a thin wrapper reading from EXISTING models and
 services — forecasting, sales, customer_insights, ecommerce, delivery,
 expenses, blockchain. Nothing here computes new business logic; it only
 retrieves and lightly summarizes what already exists elsewhere.
-
-This is the layer conversational.py (19c) routes questions to. Keeping
-it separate from conversational.py itself means the "what data exists"
-concern is fully decoupled from the "how do we phrase it" concern.
 """
 from datetime import timedelta
 from decimal import Decimal
@@ -32,10 +28,6 @@ from blockchain.services import verify_chain
 # ---------------------------------------------------------------------------
 
 def get_restock_candidates(limit=10):
-    """
-    Products whose latest sufficient-data forecast recommends restocking
-    (recommended_restock_quantity > 0), most urgent first.
-    """
     latest_forecasts = (
         DemandForecast.objects
         .filter(has_sufficient_data=True, recommended_restock_quantity__gt=0)
@@ -57,10 +49,6 @@ def get_restock_candidates(limit=10):
 
 
 def get_slow_moving_products(days=30, limit=10):
-    """
-    Active products with the lowest total completed-sale quantity in the
-    last `days` days. Includes products with zero sales.
-    """
     cutoff = timezone.now() - timedelta(days=days)
     sold_quantities = dict(
         SaleItem.objects
@@ -75,10 +63,6 @@ def get_slow_moving_products(days=30, limit=10):
 
 
 def get_overstocked_products(limit=10):
-    """
-    Products with sufficient-data forecasts where current stock far
-    exceeds predicted demand (stock > 2x predicted_quantity).
-    """
     latest_forecasts = (
         DemandForecast.objects
         .filter(has_sufficient_data=True)
@@ -210,11 +194,6 @@ def get_customers_near_credit_limit(threshold_ratio=0.8, limit=10):
 # ---------------------------------------------------------------------------
 
 def get_delivery_zone_profitability():
-    """
-    Mirrors the Metabase 18e query in Django ORM form: estimated profit
-    per zone based on fee structure vs. operational cost, plus actual
-    revenue collected from real orders.
-    """
     zones = DeliveryZone.objects.filter(is_active=True)
     results = []
     for zone in zones:
@@ -257,16 +236,104 @@ def get_expense_summary(days=7):
 # ---------------------------------------------------------------------------
 
 def get_blockchain_status():
-    """Thin wrapper over the existing verify_chain() — never reimplemented."""
     return verify_chain()
+
+
+# ---------------------------------------------------------------------------
+# Period-over-period comparison (today's addition)
+# ---------------------------------------------------------------------------
+
+def get_period_over_period_comparison():
+    """
+    Compares this-week/this-month metrics against the immediately
+    preceding equivalent period. Purely deterministic — no LLM
+    involvement, no invented figures. Every value is either a real
+    number computed from the database, or explicitly None when the
+    comparison cannot be reliably calculated (e.g. no data in the
+    prior period at all), so callers/prompts can honestly say
+    "data unavailable" rather than fabricate a percentage against zero.
+    """
+    now = timezone.now()
+
+    this_week_start = now - timedelta(days=7)
+    last_week_start = now - timedelta(days=14)
+    last_week_end = this_week_start
+
+    this_week_sales = Sale.objects.filter(status='completed', sale_date__gte=this_week_start)
+    last_week_sales = Sale.objects.filter(status='completed', sale_date__gte=last_week_start, sale_date__lt=last_week_end)
+
+    this_week_revenue = this_week_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    last_week_revenue = last_week_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+    this_week_orders = this_week_sales.count()
+    last_week_orders = last_week_sales.count()
+
+    this_week_expenses = Expense.objects.filter(expense_date__gte=this_week_start.date()).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    last_week_expenses = Expense.objects.filter(expense_date__gte=last_week_start.date(), expense_date__lt=last_week_end.date()).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    this_month_start = now - timedelta(days=30)
+    last_month_start = now - timedelta(days=60)
+    last_month_end = this_month_start
+
+    this_month_sales = Sale.objects.filter(status='completed', sale_date__gte=this_month_start)
+    last_month_sales = Sale.objects.filter(status='completed', sale_date__gte=last_month_start, sale_date__lt=last_month_end)
+
+    this_month_revenue = this_month_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    last_month_revenue = last_month_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+    this_month_orders = this_month_sales.count()
+    last_month_orders = last_month_sales.count()
+
+    this_month_expenses = Expense.objects.filter(expense_date__gte=this_month_start.date()).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    last_month_expenses = Expense.objects.filter(expense_date__gte=last_month_start.date(), expense_date__lt=last_month_end.date()).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    def _compare(current, previous):
+        current = float(current)
+        previous = float(previous)
+        if previous == 0:
+            return {
+                'current': current,
+                'previous': previous,
+                'change': None,
+                'pct_change': None,
+                'available': False,
+                'note': 'No data in the previous period to compare against.',
+            }
+        change = current - previous
+        pct_change = (change / previous) * 100
+        return {
+            'current': current,
+            'previous': previous,
+            'change': round(change, 2),
+            'pct_change': round(pct_change, 1),
+            'available': True,
+        }
+
+    return {
+        'week_over_week': {
+            'revenue': _compare(this_week_revenue, last_week_revenue),
+            'orders': _compare(this_week_orders, last_week_orders),
+            'expenses': _compare(this_week_expenses, last_week_expenses),
+        },
+        'month_over_month': {
+            'revenue': _compare(this_month_revenue, last_month_revenue),
+            'orders': _compare(this_month_orders, last_month_orders),
+            'expenses': _compare(this_month_expenses, last_month_expenses),
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Cross-module diagnostic aggregator
+# ---------------------------------------------------------------------------
 
 def get_business_diagnostic_context():
     """
     Cross-module aggregator for open-ended 'why'/'how is business doing'
     questions — pulls a snapshot from sales, expenses, churn, delivery,
-    and forecast confidence into one structured dict. Never computes new
-    business logic itself; purely composes results from the existing
-    single-domain functions above.
+    forecast confidence, and period comparisons into one structured
+    dict. Never computes new business logic itself; purely composes
+    results from the functions above.
     """
     sales = get_todays_sales_summary()
     top_sellers = get_top_selling_products(days=7, limit=3)
@@ -276,6 +343,7 @@ def get_business_diagnostic_context():
     churn = get_highest_churn_risk_customers(limit=3)
     delivery = get_delivery_zone_profitability()
     blockchain = get_blockchain_status()
+    period_comparison = get_period_over_period_comparison()
 
     return {
         'todays_sales': sales,
@@ -286,4 +354,5 @@ def get_business_diagnostic_context():
         'highest_churn_risk_customers': churn,
         'delivery_zone_profitability': delivery[:3] if delivery else [],
         'blockchain_status': blockchain,
+        'period_over_period_comparison': period_comparison,
     }

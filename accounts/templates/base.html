@@ -158,12 +158,17 @@
     </div>
 </aside>
 
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- ===== MAIN WRAPPER ===== -->
 <div class="main-wrapper">
 
     <!-- TOP BAR -->
     <header class="topbar">
         <div class="topbar-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
             <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
         </div>
         <div class="topbar-right">
@@ -208,6 +213,21 @@
     </main>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var hamburger = document.getElementById('hamburgerBtn');
+    var sidebar = document.querySelector('.sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+
+    if (hamburger) hamburger.addEventListener('click', toggleSidebar);
+    if (overlay) overlay.addEventListener('click', toggleSidebar);
+});
+</script>
 <script src="{% static 'js/main.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
