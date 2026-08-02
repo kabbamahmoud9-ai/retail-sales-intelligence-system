@@ -20,7 +20,7 @@ from sales.models import Sale, SaleItem
 from delivery.models import DeliveryZone
 from . import services
 from blockchain.services import create_ledger_entry
-
+from decimal import Decimal
 
 # ---------------------------------------------------------------------------
 # OnlineCustomer
@@ -43,11 +43,11 @@ class OnlineCustomer(models.Model):
 
     # Credit system — used when payment_method = 'credit'
     credit_limit    = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.00,
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
         help_text="Maximum credit the customer can carry"
     )
     credit_balance  = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.00,
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
         help_text="Current outstanding credit owed by customer"
     )
 
@@ -57,7 +57,7 @@ class OnlineCustomer(models.Model):
 
     # --- Customer intelligence (Step 11) --------------------------------
     lifetime_spending = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0.00,
+        max_digits=12, decimal_places=2, default=Decimal('0.00'),
         help_text="Cumulative total of all confirmed order amounts"
     )
     total_orders = models.PositiveIntegerField(default=0)
