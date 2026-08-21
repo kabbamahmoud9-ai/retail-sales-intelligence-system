@@ -114,7 +114,12 @@ def _extract_slots(message_text, context_state):
     updated = dict(context_state)
     message_lower = message_text.lower()
 
-    budget_match = re.search(r'\bLe\s?([\d,]+)|\b([\d,]{3,})\s?(?:le|leones)?\b', message_text, re.IGNORECASE)
+    budget_match = re.search(
+        r'\bLe\s?([\d,]+)(?!\s*(?:guests?|people|persons?))\b'
+        r'|\b([\d,]{2,})\s*(?:le|leones)\b',
+        message_text,
+        re.IGNORECASE,
+    )
     if budget_match:
         raw = (budget_match.group(1) or budget_match.group(2) or '').replace(',', '')
         if raw.isdigit():

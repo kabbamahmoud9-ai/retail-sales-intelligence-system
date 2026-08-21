@@ -692,3 +692,47 @@ def get_reorder_suggestions(customer, limit=5):
         }
         for product_id, count in ranked
     ]
+
+
+def build_validated_basket(recommendations, budget=None):
+    """
+    Takes the already-ranked/diversified ShoppingRecommendation list
+    (real products, real prices, real stock — nothing computed here is
+    invented) and produces a validated basket summary: real total,
+    remaining budget, and whether the budget is exceeded.
+
+    This is the SOLE place basket arithmetic happens. Both the
+    rule-based conversational path (conversational.py) and the LLM
+    rephrase path (llm_adapter.py) call this same function, so the
+    customer sees the same basket/total/budget status regardless of
+    AI_PROVIDER — only the phrasing differs, never the facts.
+    """
+    items = []
+    total = Decimal('0.00')
+
+    for rec in recommendations:
+        price = rec.product.online_price or Decimal('0.00')
+        total += price
+        items.append({
+            "product": rec.product,
+            "price": price,
+            "stock": rec.product.quantity_in_stock,
+            "reasoning": rec.reasoning,
+        })
+
+    basket_budget = None
+    remaining = None
+    exceeds_budget = None
+
+    if budget is not None:
+        basket_budget = budget if isinstance(budget, Decimal) else Decimal(str(budget))
+        remaining = (basket_budget - total).quantize(Decimal('0.01'))
+        exceeds_budget = total > basket_budget
+
+    return {
+        "items": items,
+        "total": total.quantize(Decimal('0.01')),
+        "budget": basket_budget,
+        "remaining": remaining,
+        "exceeds_budget": exceeds_budget,
+    }

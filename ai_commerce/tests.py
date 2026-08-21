@@ -106,3 +106,115 @@ class RecommendationEngineTests(TestCase):
         recommendations = generate_shopping_recommendations(session)
         recommended_products = [r.product for r in recommendations]
         self.assertNotIn(self.soda, recommended_products)
+
+class _FakeRecommendation:
+    """Minimal stand-in exposing only what build_validated_basket() reads."""
+    def __init__(self, product, reasoning="test reasoning"):
+        self.product = product
+        self.reasoning = reasoning
+
+
+class BasketValidationTests(TestCase):
+    def setUp(self):
+        from products.models import Category, Product
+        from decimal import Decimal
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.product_a = Product.objects.create(
+            product_name="Test Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"), quantity_in_stock=10,
+            reorder_level=2, is_active=True, is_available_online=True,
+        )
+        self.product_b = Product.objects.create(
+            product_name="Test Cooking Oil 1L", category=self.category,
+            unit_price=Decimal("64.50"), online_price=Decimal("64.50"), quantity_in_stock=10,
+            reorder_level=2, is_active=True, is_available_online=True,
+        )
+
+    def test_total_sums_correctly_across_multiple_items(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        recs = [_FakeRecommendation(self.product_a), _FakeRecommendation(self.product_b)]
+        basket = build_validated_basket(recs, budget=None)
+        self.assertEqual(basket["total"], Decimal("184.50"))
+        self.assertEqual(len(basket["items"]), 2)
+
+    def test_exceeds_budget_true_with_correct_negative_remaining(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        recs = [_FakeRecommendation(self.product_a), _FakeRecommendation(self.product_b)]
+        basket = build_validated_basket(recs, budget=Decimal("150.00"))
+        self.assertTrue(basket["exceeds_budget"])
+        self.assertEqual(basket["remaining"], Decimal("-34.50"))
+
+    def test_exceeds_budget_false_with_correct_positive_remaining(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        recs = [_FakeRecommendation(self.product_a), _FakeRecommendation(self.product_b)]
+        basket = build_validated_basket(recs, budget=Decimal("200.00"))
+        self.assertFalse(basket["exceeds_budget"])
+        self.assertEqual(basket["remaining"], Decimal("15.50"))
+
+    def test_no_budget_gives_none_remaining_and_exceeds(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        recs = [_FakeRecommendation(self.product_a)]
+        basket = build_validated_basket(recs, budget=None)
+        self.assertIsNone(basket["remaining"])
+        self.assertIsNone(basket["exceeds_budget"])
+        self.assertEqual(basket["total"], Decimal("120.00"))
+
+    def test_empty_recommendation_list_gives_zero_total(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        basket = build_validated_basket([], budget=Decimal("100.00"))
+        self.assertEqual(basket["total"], Decimal("0.00"))
+        self.assertEqual(basket["remaining"], Decimal("100.00"))
+        self.assertFalse(basket["exceeds_budget"])
+
+    def test_float_budget_input_handled_same_as_decimal(self):
+        from decimal import Decimal
+        from ai_commerce.services import build_validated_basket
+        recs = [_FakeRecommendation(self.product_a)]
+        basket = build_validated_basket(recs, budget=150.0)
+        self.assertEqual(basket["budget"], Decimal("150.0"))
+        self.assertFalse(basket["exceeds_budget"])
+
+
+class ShoppingQueryBasketIntegrationTests(TestCase):
+    def setUp(self):
+        from products.models import Category, Product
+        from ecommerce.models import OnlineCustomer
+        from decimal import Decimal
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.product = Product.objects.create(
+            product_name="Local Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"), quantity_in_stock=10,
+            reorder_level=2, is_active=True, is_available_online=True,
+        )
+        self.customer = OnlineCustomer.objects.create(
+            full_name="Test Customer", email="basket_test@example.com", phone="0000000000",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+
+    def test_reply_includes_total_line(self):
+        from ai_commerce.conversational import _handle_shopping_query
+        reply_text, routed_to = _handle_shopping_query(
+            customer=self.customer, message_text="I need rice", context_state={},
+        )
+        self.assertIn("Total: Le", reply_text)
+        self.assertEqual(routed_to, "shopping_assistant")
+
+    def test_reply_includes_budget_status_when_budget_given(self):
+        from ai_commerce.conversational import _handle_shopping_query
+        reply_text, routed_to = _handle_shopping_query(
+            customer=self.customer, message_text="I need rice", context_state={"budget": 200.0},
+        )
+        self.assertTrue("of your Le" in reply_text or "over your stated budget" in reply_text)
+
+    def test_reply_omits_budget_status_when_no_budget_given(self):
+        from ai_commerce.conversational import _handle_shopping_query
+        reply_text, routed_to = _handle_shopping_query(
+            customer=self.customer, message_text="I need rice", context_state={},
+        )
+        self.assertNotIn("your stated budget", reply_text)
