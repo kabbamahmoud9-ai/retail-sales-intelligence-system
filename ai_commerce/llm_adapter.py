@@ -27,17 +27,14 @@ def _build_simple_prompt(message_text, base_reply):
 
 def _build_shopping_prompt(customer, message_text, context_state):
     """
-    Builds a richer, structured context for shopping questions: the
-    ALREADY-SELECTED real candidates (backend remains the sole source of
-    truth for which products qualify and their real price/stock), plus
-    occasion/budget/guest-count context, plus a backend-computed real
-    total. The LLM only composes a natural narrative from this data —
-    it never selects products, never invents a price, never computes
-    the total itself.
+    Builds structured context for shopping questions: the already-
+    selected real candidates, occasion/budget/guest-count context, and
+    a backend-computed basket total/remaining/exceeds_budget verdict.
+    The LLM only composes a narrative from this data — it never
+    selects products, invents a price, or judges the budget itself.
     """
-    from .services import parse_natural_language_query, generate_shopping_recommendations
+    from .services import parse_natural_language_query, generate_shopping_recommendations, build_validated_basket
     from .models import ShoppingSession
-    from decimal import Decimal
 
     parsed_intent = parse_natural_language_query(message_text)
 
@@ -57,16 +54,15 @@ def _build_shopping_prompt(customer, message_text, context_state):
         base_reply = "I couldn't find anything matching that in our catalogue right now. Could you try describing it differently?"
         return base_reply, 'shopping_assistant', _build_simple_prompt(message_text, base_reply)
 
-    top = recommendations  # use the FULL diversified basket generate_shopping_recommendations() already produced — do not re-truncate a list that's already been category-balanced
-    real_total = sum((r.product.online_price or Decimal('0.00')) for r in top)
+    basket = build_validated_basket(recommendations, budget=session.budget)
 
     item_lines = "\n".join(
-        f"- {r.product.product_name}: Le {r.product.online_price} (stock: {r.product.quantity_in_stock}) — {r.reasoning}"
-        for r in top
+        f"- {item['product'].product_name}: Le {item['price']} (stock: {item['stock']}) — {item['reasoning']}"
+        for item in basket["items"]
     )
 
     base_reply = "Here are a few options based on what you're looking for:\n" + "\n".join(
-        f"- {r.product.product_name} — Le {r.product.online_price} ({r.reasoning})" for r in top
+        f"- {item['product'].product_name} — Le {item['price']} ({item['reasoning']})" for item in basket["items"]
     )
 
     context_notes = []
@@ -77,16 +73,32 @@ def _build_shopping_prompt(customer, message_text, context_state):
     if context_state.get('budget'):
         context_notes.append(f"Stated budget: Le {context_state['budget']}")
 
+    budget_fact = ""
+    if basket["budget"] is not None:
+        if basket["exceeds_budget"]:
+            budget_fact = (
+                f"IMPORTANT FACT (already computed by the backend — do not recompute or "
+                f"contradict this): this basket's total of Le {basket['total']} EXCEEDS the "
+                f"customer's stated budget of Le {basket['budget']} by Le {abs(basket['remaining'])}. "
+                f"You must say so honestly.\n\n"
+            )
+        else:
+            budget_fact = (
+                f"IMPORTANT FACT (already computed by the backend — do not recompute this): "
+                f"this basket's total of Le {basket['total']} fits within the customer's "
+                f"stated budget of Le {basket['budget']}, leaving Le {basket['remaining']} remaining.\n\n"
+            )
+
     prompt = (
         f"A customer said: \"{message_text}\"\n\n"
         + ("\n".join(context_notes) + "\n\n" if context_notes else "")
         + f"Our catalogue system has already selected these REAL, currently available products "
         f"(do not add, remove, or substitute any item, and never change a name/price/stock figure):\n\n"
         f"{item_lines}\n\n"
-        f"Real total for these items: Le {real_total:.2f}\n\n"
-        f"Write a natural, warm response that explains why this basket suits their request, "
-        f"referencing the occasion/guest count/budget where relevant. Mention the real total. "
-        f"If you believe your budget is exceeded, say so honestly."
+        f"Real total for these items: Le {basket['total']}\n\n"
+        + budget_fact
+        + f"Write a natural, warm response that explains why this basket suits their request, "
+        f"referencing the occasion/guest count/budget where relevant. Mention the real total."
     )
 
     return base_reply, 'shopping_assistant', prompt

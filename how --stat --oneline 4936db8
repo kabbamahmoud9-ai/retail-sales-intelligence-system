@@ -1,0 +1,54 @@
+[33m502809e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Step 19h: automated tests for credit workflow, checkout, and blockchain integrity
+[33ma46db7d[m Restore advisor/data_gathering.py + add period-over-period comparison
+[33mb50b3c8[m Profile/Account Management (core) + My Orders fix + avatar polish
+[33m4d24bfa[m Step 19g: delivery tracking, confirmation, and product/delivery reviews
+[33m6bd16d7[m Step 19g-a: delivery confirmation + review models
+[33m3af5375[m Steps c/d/e: richer Gemini context + Advisor cross-module diagnostics
+[33m60d8c21[m Step B: occasion-aware slot extraction + context-aware recommendation scoring
+[33mec7fe07[m Step a: wire family_size/shopping_purpose into recommendation engine
+[33m6ac7e66[m Centralized AI provider abstraction (core/ai_engine.py)
+[33m67b4736[m Customer-facing online credit repayment (standalone + checkout-time)
+[33m4936db8[m Fix credit workflow: approval + repayment gap
+[33md343a2e[m Step 19f fix: intent classifier rewrite (prefix + order-independent matching)
+[33m3e748f9[m Step 19f: AI Advisor chat UI + Business Health + Daily Briefing
+[33m4b98864[m Step 19d: Business Health Dashboard aggregation, wired into conversational business_summary intent
+[33m7109f8c[m Step 19d: Business Health Dashboard aggregation, wired into conversational business_summary intent
+[33m82d6220[m Step 19c: Advisor conversational orchestrator and personality layer
+[33m65ddac5[m Step 19b: Advisor read-only data-gathering layer across 8 modules, verified end-to-end
+[33m0d52248[m Step 19a: AI Business Consultant models
+[33m9ade55f[m Step 17: fix Gemini adapter (model name, timeout) + UI/UX polish
+[33m5071e7d[m Step 17c: Gemini extension point (optional, inert by default)
+[33mc3fa3f3[m Step 17b: Conversational Shopping AI orchestration layer
+[33m1376142[m Step 17a: Conversational Shopping AI models
+[33m72e849b[m Step 16f: Customer Insights staff dashboard + regenerate button
+[33m078a689[m Step 16d: Customer Insights ML layer + orchestrator
+[33m398e0d9[m Step 16e: seed_demo_customer_history management command
+[33md2023bf[m Step 16c: Customer Insights rule-based services
+[33md3d323d[m Step 16a/16b: Customer Insights scaffold + event capture
+[33m059e311[m Step 15: AI Visual Search complete (CLIP-based image similarity)
+[33mec195b2[m Step 14b: Blockchain Verify Ledger staff page + sidebar nav link
+[33m07d93f4[m Step 14a: Blockchain audit ledger — core implementation
+[33m0509cd0[m Step 13d: Staff AI Business Advisor voice recap
+[33m25e1bc1[m Step 13c: Voice for Smart Credit & Loyalty Assistant
+[33mdc9fb6a[m Step 13b: Voice wiring for AI Shopping Assistant
+[33m2d7a322[m Fix AI Shopping Assistant recommendation relevance issues
+[33m781504e[m Add seed_full_catalog management command: ~100-product SL retail catalog
+[33m7f666e7[m Step 12d: customer-facing views for AI Shopping Assistant + Credit/Loyalty Assistant
+[33m83db1ae[m Step 12c: Smart Credit Assistant + reorder suggestions
+[33m92b1788[m Step 12b (revised): rule-based recommendation engine, no external AI API
+[33m00607a9[m Step 12a: ai_commerce app skeleton + core models
+[33m30e129d[m Step 11c: Staff-facing customer intelligence and delivery management views
+[33m7d3ad7b[m Step 11b: Advanced Customer Management + checkout delivery integration
+[33m28fdd77[m Step 11a: Delivery app - DeliveryZone model, CRUD, and profitability analytics
+[33me4d7a9b[m Step 10: AI Demand Forecasting + AI Business Advisor
+[33m45c952a[m Step 9: AI Notification Center - bell icon, panel, smart alerts
+[33me3b8c56[m Step 8: E-Commerce complete - store UI upgraded, all bugs fixed
+[33md947ec6[m Modern UI upgrade: new design system, sidebar, topbar, and all templates updated
+[33mf6ba135[m Step 7: Demand Intelligence (Customer Requests) module
+[33m270c74a[m Step 6: Expense Management module and dashboard integration
+[33m1913ed5[m Step 5: Sales Management and live dashboard stats
+[33md81da71[m Step 4: Inventory Management module
+[33ma691439[m Step 3: Products, Categories and Suppliers module
+[33ma7b8bda[m Step 2: Authentication and dashboard template
+[33ma671026[m Initial project setup
+[33mbaa8957[m Initial Django Retail Intelligence Project

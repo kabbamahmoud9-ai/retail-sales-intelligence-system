@@ -146,10 +146,11 @@ def _extract_slots(message_text, context_state):
 def _handle_shopping_query(customer, message_text, context_state):
     """
     Constructs a throwaway ShoppingSession exactly the way Mode 1
-    already does (see ai_commerce/views.py's natural-language mode),
-    then calls the existing, unmodified generate_shopping_recommendations().
+    already does, calls generate_shopping_recommendations(), then
+    build_validated_basket() to compute a real total against the
+    customer's stated budget (if any).
     """
-    from .services import parse_natural_language_query
+    from .services import parse_natural_language_query, build_validated_basket
 
     parsed_intent = parse_natural_language_query(message_text)
 
@@ -168,12 +169,20 @@ def _handle_shopping_query(customer, message_text, context_state):
     if not recommendations:
         return "I couldn't find anything matching that in our catalogue right now. Could you try describing it differently?", 'shopping_assistant'
 
-    top = recommendations[:3]
-    lines = [f"Here are a few options based on what you're looking for:"]
-    for rec in top:
-        lines.append(f"- {rec.product.product_name} — Le {rec.product.online_price} ({rec.reasoning})")
-    return "\n".join(lines), 'shopping_assistant'
+    basket = build_validated_basket(recommendations, budget=session.budget)
 
+    lines = ["Here are a few options based on what you're looking for:"]
+    for item in basket["items"]:
+        lines.append(f"- {item['product'].product_name} — Le {item['price']} ({item['reasoning']})")
+
+    lines.append(f"\nTotal: Le {basket['total']}")
+    if basket["budget"] is not None:
+        if basket["exceeds_budget"]:
+            lines.append(f"This is Le {abs(basket['remaining'])} over your stated budget of Le {basket['budget']}.")
+        else:
+            lines.append(f"That leaves Le {basket['remaining']} of your Le {basket['budget']} budget.")
+
+    return "\n".join(lines), 'shopping_assistant'
 
 def _handle_credit_question(customer):
     assessment = calculate_credit_recommendation(customer)
