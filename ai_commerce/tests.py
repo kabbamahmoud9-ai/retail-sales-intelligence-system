@@ -218,3 +218,34 @@ class ShoppingQueryBasketIntegrationTests(TestCase):
             customer=self.customer, message_text="I need rice", context_state={},
         )
         self.assertNotIn("your stated budget", reply_text)
+
+
+class BudgetSlotExtractionTests(TestCase):
+    def test_bare_guest_count_not_misread_as_budget(self):
+        from ai_commerce.conversational import _extract_slots
+        result = _extract_slots("I'm expecting 250 guests this weekend", {})
+        self.assertNotIn('budget', result)
+        self.assertEqual(result.get('family_size'), 250)
+
+    def test_le_prefixed_amount_still_detected(self):
+        from ai_commerce.conversational import _extract_slots
+        result = _extract_slots("I have Le 200 to spend", {})
+        self.assertEqual(result.get('budget'), 200.0)
+
+    def test_leones_suffixed_amount_still_detected(self):
+        from ai_commerce.conversational import _extract_slots
+        result = _extract_slots("My budget is 150 leones", {})
+        self.assertEqual(result.get('budget'), 150.0)
+
+    def test_le_amount_immediately_followed_by_guests_not_misread(self):
+        from ai_commerce.conversational import _extract_slots
+        # Edge case: "Le 200 guests" is nonsensical phrasing, but confirms
+        # the negative lookahead actually blocks this specific false-positive
+        # shape rather than just the bare-number case above.
+        result = _extract_slots("Le 200 guests are coming", {})
+        self.assertNotIn('budget', result)
+
+    def test_no_budget_mentioned_leaves_slot_unset(self):
+        from ai_commerce.conversational import _extract_slots
+        result = _extract_slots("I need rice for dinner", {})
+        self.assertNotIn('budget', result)
