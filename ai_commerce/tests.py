@@ -7,6 +7,7 @@ went through the most debugging today.
 """
 from decimal import Decimal
 from django.test import TestCase
+from unittest import mock
 
 from products.models import Product, Category
 from ecommerce.models import OnlineCustomer
@@ -355,3 +356,76 @@ class PurchaseHistoryScoringTests(TestCase):
         purchase_categories, product_order_counts = _get_customer_purchase_signal(new_customer)
         self.assertEqual(purchase_categories, set())
         self.assertEqual(product_order_counts, {})
+
+class ShoppingPromptBudgetFactTests(TestCase):
+    def setUp(self):
+        from products.models import Category, Product
+        from ecommerce.models import OnlineCustomer
+        from decimal import Decimal
+
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.product = Product.objects.create(
+            product_name="Local Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.customer = OnlineCustomer.objects.create(
+            full_name="Prompt Test Customer", email="prompt_test@example.com", phone="0000000003",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+
+    def test_prompt_states_exceeds_budget_as_fact(self):
+        from ai_commerce.llm_adapter import _build_shopping_prompt
+        base_reply, routed_to, prompt = _build_shopping_prompt(
+            self.customer, "I need rice", {"budget": 50.0},
+        )
+        self.assertIn("IMPORTANT FACT", prompt)
+        self.assertIn("EXCEEDS", prompt)
+        self.assertIn("already computed by the backend", prompt)
+        self.assertEqual(routed_to, "shopping_assistant")
+
+    def test_prompt_states_fits_budget_as_fact(self):
+        from ai_commerce.llm_adapter import _build_shopping_prompt
+        base_reply, routed_to, prompt = _build_shopping_prompt(
+            self.customer, "I need rice", {"budget": 200.0},
+        )
+        self.assertIn("IMPORTANT FACT", prompt)
+        self.assertIn("fits within", prompt)
+        self.assertIn("remaining", prompt)
+
+    def test_prompt_omits_budget_fact_when_no_budget_given(self):
+        from ai_commerce.llm_adapter import _build_shopping_prompt
+        base_reply, routed_to, prompt = _build_shopping_prompt(
+            self.customer, "I need rice", {},
+        )
+        self.assertNotIn("IMPORTANT FACT", prompt)
+
+    def test_prompt_never_asks_llm_to_judge_budget_itself(self):
+        """Regression guard: the old 'if you believe your budget is exceeded,
+        say so honestly' phrasing must never reappear in any budget state."""
+        from ai_commerce.llm_adapter import _build_shopping_prompt
+        for budget in (50.0, 200.0, None):
+            context_state = {"budget": budget} if budget is not None else {}
+            _, _, prompt = _build_shopping_prompt(self.customer, "I need rice", context_state)
+            self.assertNotIn("if you believe", prompt.lower())
+
+    def test_rephrased_response_used_when_provider_returns_text(self):
+        from ai_commerce.llm_adapter import get_llm_response
+        from django.conf import settings
+
+        with mock.patch("ai_commerce.llm_adapter.ai_generate", return_value="Mocked rephrased reply"):
+            reply_text, routed_to = get_llm_response("I need rice", {}, self.customer)
+
+        self.assertEqual(reply_text, "Mocked rephrased reply")
+        self.assertEqual(routed_to, f"shopping_assistant+{settings.AI_PROVIDER}")
+
+    def test_falls_back_to_base_reply_when_provider_returns_none(self):
+        from ai_commerce.llm_adapter import get_llm_response
+
+        with mock.patch("ai_commerce.llm_adapter.ai_generate", return_value=None):
+            reply_text, routed_to = get_llm_response("I need rice", {}, self.customer)
+
+        self.assertIn("Here are a few options", reply_text)
+        self.assertEqual(routed_to, "shopping_assistant")
