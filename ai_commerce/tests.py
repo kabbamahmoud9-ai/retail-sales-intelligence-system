@@ -249,3 +249,109 @@ class BudgetSlotExtractionTests(TestCase):
         from ai_commerce.conversational import _extract_slots
         result = _extract_slots("I need rice for dinner", {})
         self.assertNotIn('budget', result)
+
+
+class PurchaseHistoryScoringTests(TestCase):
+    def setUp(self):
+        from products.models import Category, Product
+        from ecommerce.models import OnlineCustomer, OnlineOrder, OnlineOrderItem
+        from decimal import Decimal
+
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.other_category = Category.objects.create(category_name="Beverages")
+
+        self.previously_bought = Product.objects.create(
+            product_name="Local Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.same_category_new = Product.objects.create(
+            product_name="Imported Rice 10kg", category=self.category,
+            unit_price=Decimal("200.00"), online_price=Decimal("200.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.unrelated_product = Product.objects.create(
+            product_name="Bottled Water", category=self.other_category,
+            unit_price=Decimal("15.00"), online_price=Decimal("15.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+
+        self.customer = OnlineCustomer.objects.create(
+            full_name="History Test Customer", email="history_test@example.com", phone="0000000001",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+
+        order = OnlineOrder.objects.create(
+            customer=self.customer, status='delivered',
+        )
+        OnlineOrderItem.objects.create(
+            order=order, product=self.previously_bought,
+            quantity=3, unit_price=self.previously_bought.online_price,
+        )
+
+        self.guest_customer = None  # represents no logged-in customer
+
+    def test_previously_bought_product_gets_higher_score_than_unpurchased(self):
+        from ai_commerce.services import _score_and_explain_one, _get_customer_purchase_signal
+        from ai_commerce.models import ShoppingSession
+
+        session = ShoppingSession.objects.create(
+            customer=self.customer, mode='natural_language', raw_query="rice",
+        )
+        purchase_categories, product_order_counts = _get_customer_purchase_signal(self.customer)
+
+        score_bought, reasoning_bought = _score_and_explain_one(
+            session, self.previously_bought, categories=[], keywords=[],
+            quality_preference=None, purchase_categories=purchase_categories,
+            product_order_counts=product_order_counts,
+        )
+        score_new, reasoning_new = _score_and_explain_one(
+            session, self.unrelated_product, categories=[], keywords=[],
+            quality_preference=None, purchase_categories=purchase_categories,
+            product_order_counts=product_order_counts,
+        )
+        self.assertGreater(score_bought, score_new)
+        self.assertIn("you've ordered this before", reasoning_bought)
+
+    def test_same_category_unpurchased_product_gets_smaller_bonus_than_exact_repurchase(self):
+        from ai_commerce.services import _score_and_explain_one, _get_customer_purchase_signal
+        from ai_commerce.models import ShoppingSession
+
+        session = ShoppingSession.objects.create(
+            customer=self.customer, mode='natural_language', raw_query="rice",
+        )
+        purchase_categories, product_order_counts = _get_customer_purchase_signal(self.customer)
+
+        score_exact, _ = _score_and_explain_one(
+            session, self.previously_bought, categories=[], keywords=[],
+            quality_preference=None, purchase_categories=purchase_categories,
+            product_order_counts=product_order_counts,
+        )
+        score_same_category, reasoning_same_category = _score_and_explain_one(
+            session, self.same_category_new, categories=[], keywords=[],
+            quality_preference=None, purchase_categories=purchase_categories,
+            product_order_counts=product_order_counts,
+        )
+        self.assertGreater(score_exact, score_same_category)
+        self.assertIn("you've purchased from Rice & Grains before", reasoning_same_category)
+
+    def test_guest_customer_gets_no_purchase_bonus(self):
+        from ai_commerce.services import _get_customer_purchase_signal
+        purchase_categories, product_order_counts = _get_customer_purchase_signal(None)
+        self.assertEqual(purchase_categories, set())
+        self.assertEqual(product_order_counts, {})
+
+    def test_customer_with_no_orders_gets_no_purchase_bonus(self):
+        from ecommerce.models import OnlineCustomer
+        from ai_commerce.services import _get_customer_purchase_signal
+
+        new_customer = OnlineCustomer.objects.create(
+            full_name="No History Customer", email="nohistory@example.com", phone="0000000002",
+        )
+        purchase_categories, product_order_counts = _get_customer_purchase_signal(new_customer)
+        self.assertEqual(purchase_categories, set())
+        self.assertEqual(product_order_counts, {})
