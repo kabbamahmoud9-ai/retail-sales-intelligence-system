@@ -209,3 +209,101 @@ class BusinessSummaryDiagnosticContextRegressionTests(TestCase):
             reply_text = process_message(self.session, self.staff_user, "give me a business summary")
 
         self.assertEqual(reply_text, "headline: steady")
+
+class LlmExplainerSerializationTests(TestCase):
+    """
+    Covers _json_default() in advisor/llm_explainer.py -- the fix for
+    CustomerInsightSnapshot/DeliveryZone/Product losing their relevant
+    fields when structured_context was serialized with json.dumps(...,
+    default=str). Confirms the LLM-facing serializer surfaces the
+    figures each model's __str__ alone would have dropped, without
+    touching data_gathering.py's return shapes or any rule-based
+    handler.
+    """
+
+    def setUp(self):
+        from products.models import Category, Product
+        from delivery.models import DeliveryZone
+        from ecommerce.models import OnlineCustomer
+        from customer_insights.models import CustomerInsightSnapshot
+        from decimal import Decimal
+
+        category = Category.objects.create(category_name="Rice & Grains")
+        self.product = Product.objects.create(
+            product_name="Local Rice 5kg", category=category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"),
+            quantity_in_stock=7, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.zone = DeliveryZone.objects.create(
+            zone_name="Freetown Central",
+            base_fee=Decimal("10.00"), per_km_rate=Decimal("2.00"),
+            average_distance_km=Decimal("5.00"),
+            estimated_operational_cost=Decimal("15.00"),
+        )
+        self.customer = OnlineCustomer.objects.create(
+            full_name="Serialization Test Customer", email="serialization_test@example.com", phone="0000000005",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+        self.snapshot = CustomerInsightSnapshot.objects.create(
+            customer=self.customer, segment='at_risk', churn_risk_score=0.82,
+        )
+
+    def test_product_serialization_preserves_stock_not_just_name(self):
+        from advisor.llm_explainer import _json_default
+
+        result = _json_default(self.product)
+        self.assertEqual(result["product_name"], "Local Rice 5kg")
+        self.assertEqual(result["quantity_in_stock"], 7)
+
+    def test_delivery_zone_serialization_preserves_name(self):
+        from advisor.llm_explainer import _json_default
+
+        result = _json_default(self.zone)
+        self.assertEqual(result["zone_name"], "Freetown Central")
+
+    def test_customer_insight_snapshot_serialization_preserves_churn_score(self):
+        from advisor.llm_explainer import _json_default
+
+        result = _json_default(self.snapshot)
+        self.assertEqual(result["customer_name"], "Serialization Test Customer")
+        self.assertEqual(result["churn_risk_score"], 0.82)
+        self.assertIn("segment", result)
+
+    def test_unrecognized_type_falls_back_to_str(self):
+        from advisor.llm_explainer import _json_default
+
+        result = _json_default(self.customer)
+        self.assertEqual(result, str(self.customer))
+
+    def test_explain_produces_valid_json_containing_model_instances(self):
+        """
+        End-to-end guard: explain() must not raise when structured_context
+        embeds real model instances, and the resulting JSON must actually
+        contain the churn score / stock figure, not just a bare __str__.
+        """
+        from unittest import mock
+        from advisor.llm_explainer import explain
+
+        context = {
+            "highest_churn_risk_customers": [self.snapshot],
+            "delivery_zone_profitability": [
+                {"zone": self.zone, "estimated_profit_per_delivery": 3.50, "order_count": 12}
+            ],
+            "forecast_trend": {"increasing_products": [self.product]},
+        }
+
+        captured_prompt = {}
+
+        def _fake_generate(prompt, system_instruction=None):
+            captured_prompt["value"] = prompt
+            return "Explained."
+
+        with mock.patch("advisor.llm_explainer.ai_generate", side_effect=_fake_generate):
+            result = explain("base reply", "why is churn high?", structured_context=context)
+
+        self.assertEqual(result, "Explained.")
+        self.assertIn("0.82", captured_prompt["value"])
+        self.assertIn("Freetown Central", captured_prompt["value"])
+        self.assertIn("Local Rice 5kg", captured_prompt["value"])
