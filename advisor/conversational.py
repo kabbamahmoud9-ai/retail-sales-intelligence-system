@@ -259,14 +259,15 @@ def _handle_unclear(staff_user):
     ), 'unclear'
     
 _DIAGNOSTIC_DOMAIN_KEYWORDS = {
-    'sales':      {'sales', 'revenue', 'selling', 'sold'},
-    'forecast':   {'forecast', 'demand', 'trend'},
-    'expenses':   {'expense', 'spending', 'cost'},
-    'churn':      {'churn', 'retention', 'at risk', 'leaving'},
-    'delivery':   {'delivery', 'zone'},
-    'blockchain': {'blockchain', 'ledger', 'audit', 'tamper'},
+    'sales':              {'sales', 'revenue', 'selling', 'sold'},
+    'forecast':           {'forecast', 'demand', 'trend'},
+    'expenses':           {'expense', 'spending', 'cost'},
+    'churn':              {'churn', 'retention', 'at risk', 'leaving'},
+    'delivery':           {'delivery', 'zone'},
+    'blockchain':         {'blockchain', 'ledger', 'audit', 'tamper'},
+    'unmet_demand':       {'customers asking', 'requested', 'out of stock request', 'unavailable', 'customer request'},
+    'inventory_activity': {'adjustment', 'shrinkage', 'restock', 'received', 'stock change'},
 }
-
 
 def _detect_diagnostic_domains(message_text):
     """
@@ -320,7 +321,14 @@ def _handle_business_diagnostic(staff_user, message_text):
         lines.append(f"Blockchain ledger: {'intact' if context['blockchain_status']['is_valid'] else 'COMPROMISED'}.")
     if 'delivery_zone_profitability' in context:
         lines.append(f"Delivery zones reported: {len(context['delivery_zone_profitability'])}.")
-
+    if 'pending_customer_requests' in context:
+        lines.append(f"Pending customer requests: {len(context['pending_customer_requests'])} unfulfilled.")
+    if 'recent_inventory_activity' in context:
+        activity = context['recent_inventory_activity']
+        lines.append(
+            f"Inventory activity ({activity['days']} days): "
+            f"{len(activity['adjustments'])} adjustment(s), {len(activity['receipts'])} receipt(s)."
+        )
     if not lines:
         lines.append("I gathered the relevant data but couldn't summarize it into a headline — let me know what specifically you'd like to know.")
 

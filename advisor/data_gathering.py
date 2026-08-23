@@ -21,6 +21,8 @@ from ecommerce.models import OnlineCustomer, OnlineOrder
 from delivery.models import DeliveryZone
 from expenses.models import Expense
 from blockchain.services import verify_chain
+from demand.models import CustomerRequest
+from inventory.models import StockReceipt, InventoryAdjustment
 
 
 # ---------------------------------------------------------------------------
@@ -330,12 +332,14 @@ def get_period_over_period_comparison():
 # 'period_over_period_comparison' is shared by sales and expenses since it
 # reports on both — cheap to include with either, no separate domain needed.
 _DIAGNOSTIC_DOMAIN_KEYS = {
-    'sales':      {'todays_sales', 'top_sellers_7d', 'slow_movers_30d', 'period_over_period_comparison'},
-    'forecast':   {'forecast_trend'},
-    'expenses':   {'expenses_30d', 'period_over_period_comparison'},
-    'churn':      {'highest_churn_risk_customers'},
-    'delivery':   {'delivery_zone_profitability'},
-    'blockchain': {'blockchain_status'},
+    'sales':               {'todays_sales', 'top_sellers_7d', 'slow_movers_30d', 'period_over_period_comparison'},
+    'forecast':            {'forecast_trend'},
+    'expenses':            {'expenses_30d', 'period_over_period_comparison'},
+    'churn':               {'highest_churn_risk_customers'},
+    'delivery':            {'delivery_zone_profitability'},
+    'blockchain':          {'blockchain_status'},
+    'unmet_demand':        {'pending_customer_requests'},
+    'inventory_activity':  {'recent_inventory_activity'},
 }
 
 _DIAGNOSTIC_KEY_COMPUTERS = {
@@ -348,6 +352,8 @@ _DIAGNOSTIC_KEY_COMPUTERS = {
     'delivery_zone_profitability':     lambda: (get_delivery_zone_profitability() or [])[:3],
     'blockchain_status':               lambda: get_blockchain_status(),
     'period_over_period_comparison':   lambda: get_period_over_period_comparison(),
+    'pending_customer_requests':       lambda: get_pending_customer_requests(limit=5),
+    'recent_inventory_activity':       lambda: get_recent_inventory_activity(days=7, limit=5),
 }
 
 
@@ -379,3 +385,62 @@ def get_business_diagnostic_context(domains=None):
             needed_keys = set(_DIAGNOSTIC_KEY_COMPUTERS.keys())
 
     return {key: _DIAGNOSTIC_KEY_COMPUTERS[key]() for key in needed_keys}
+
+
+# ---------------------------------------------------------------------------
+# Unmet demand / inventory activity
+# ---------------------------------------------------------------------------
+
+def get_pending_customer_requests(limit=10):
+    requests = (
+        CustomerRequest.objects
+        .filter(status='pending')
+        .select_related('product')
+        .order_by('-requested_at')[:limit]
+    )
+    return [
+        {
+            'product_name': r.product.product_name if r.product else r.product_name_requested,
+            'quantity_requested': r.quantity_requested,
+            'customer_name': r.customer_name,
+            'requested_at': r.requested_at,
+        }
+        for r in requests
+    ]
+
+
+def get_recent_inventory_activity(days=7, limit=10):
+    cutoff = timezone.now() - timedelta(days=days)
+
+    adjustments = (
+        InventoryAdjustment.objects
+        .filter(adjusted_at__gte=cutoff)
+        .select_related('product')
+        .order_by('-adjusted_at')[:limit]
+    )
+    receipts = (
+        StockReceipt.objects
+        .filter(receipt_date__gte=cutoff)
+        .select_related('product')
+        .order_by('-receipt_date')[:limit]
+    )
+
+    return {
+        'adjustments': [
+            {
+                'product_name': a.product.product_name,
+                'adjustment_type': a.adjustment_type,
+                'quantity': a.quantity,
+                'reason': a.reason,
+            }
+            for a in adjustments
+        ],
+        'receipts': [
+            {
+                'product_name': r.product.product_name,
+                'quantity_received': r.quantity_received,
+            }
+            for r in receipts
+        ],
+        'days': days,
+    }

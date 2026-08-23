@@ -45,6 +45,14 @@ class DiagnosticDomainDetectionTests(SimpleTestCase):
         domains = _detect_diagnostic_domains("What sold well this week?")
         self.assertIn('sales', domains)
 
+    def test_unmet_demand_question_detects_unmet_demand_domain(self):
+        domains = _detect_diagnostic_domains("What have customers requested that we don't stock?")
+        self.assertIn('unmet_demand', domains)
+
+    def test_inventory_activity_question_detects_inventory_activity_domain(self):
+        domains = _detect_diagnostic_domains("Were there any recent stock adjustments?")
+        self.assertIn('inventory_activity', domains)
+
 
 class DiagnosticContextScopingTests(TestCase):
     """
@@ -70,6 +78,8 @@ class DiagnosticContextScopingTests(TestCase):
             'get_delivery_zone_profitability': [],
             'get_blockchain_status': mock.sentinel.value,
             'get_period_over_period_comparison': mock.sentinel.value,
+            'get_pending_customer_requests': mock.sentinel.value,
+            'get_recent_inventory_activity': mock.sentinel.value,
         }
         patchers = {
             name: mock.patch.object(dg, name, return_value=value)
@@ -118,6 +128,24 @@ class DiagnosticContextScopingTests(TestCase):
         self.assertIn('period_over_period_comparison', context)
         self.assertIn('todays_sales', context)
         mocks['get_blockchain_status'].assert_not_called()
+    
+    def test_unmet_demand_domain_computes_only_pending_requests(self):
+        mocks = self._mock_all_computers()
+        context = dg.get_business_diagnostic_context(domains={'unmet_demand'})
+
+        mocks['get_pending_customer_requests'].assert_called_once()
+        mocks['get_recent_inventory_activity'].assert_not_called()
+        mocks['get_blockchain_status'].assert_not_called()
+        self.assertEqual(set(context.keys()), {'pending_customer_requests'})
+
+    def test_inventory_activity_domain_computes_only_activity(self):
+        mocks = self._mock_all_computers()
+        context = dg.get_business_diagnostic_context(domains={'inventory_activity'})
+
+        mocks['get_recent_inventory_activity'].assert_called_once()
+        mocks['get_pending_customer_requests'].assert_not_called()
+        mocks['get_forecast_trend_summary'].assert_not_called()
+        self.assertEqual(set(context.keys()), {'recent_inventory_activity'})
 
     def test_unrecognized_domain_falls_back_to_full_context(self):
         mocks = self._mock_all_computers()
