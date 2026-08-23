@@ -257,22 +257,76 @@ def _handle_unclear(staff_user):
         "\"Which products should I restock?\", \"What's today's sales summary?\", "
         "\"Which customers are at risk of churning?\", or \"Is the blockchain ledger intact?\""
     ), 'unclear'
-def _handle_business_diagnostic(staff_user):
+    
+_DIAGNOSTIC_DOMAIN_KEYWORDS = {
+    'sales':      {'sales', 'revenue', 'selling', 'sold'},
+    'forecast':   {'forecast', 'demand', 'trend'},
+    'expenses':   {'expense', 'spending', 'cost'},
+    'churn':      {'churn', 'retention', 'at risk', 'leaving'},
+    'delivery':   {'delivery', 'zone'},
+    'blockchain': {'blockchain', 'ledger', 'audit', 'tamper'},
+}
+
+
+def _detect_diagnostic_domains(message_text):
+    """
+    Reuses the same token-prefix matching approach as _classify_intent()
+    to scan a diagnostic question for domain signals. Returns a set of
+    matched domain names, or an empty set for a genuinely general
+    question ("how is business doing overall") — an empty set tells
+    get_business_diagnostic_context() to fall back to computing
+    everything, which is the correct behavior for a general question.
+    """
+    raw_tokens = re.findall(r'[a-z]+', message_text.lower())
+
+    def _phrase_matches(phrase):
+        words = phrase.split()
+        return all(
+            any(token.startswith(word) for token in raw_tokens)
+            for word in words
+        )
+
+    matched = set()
+    for domain, keywords in _DIAGNOSTIC_DOMAIN_KEYWORDS.items():
+        for kw in keywords:
+            if _phrase_matches(kw):
+                matched.add(domain)
+                break
+    return matched
+
+
+def _handle_business_diagnostic(staff_user, message_text):
     """
     Cross-module synthesis for open-ended business questions. Rule-based
     reply lists the raw facts plainly; the LLM (when active) does the
     actual synthesis/explanation over this same structured data — see
-    llm_explainer.explain_diagnostic().
+    llm_explainer.explain_diagnostic(). Only reports on the domains the
+    question actually touched, per get_business_diagnostic_context()'s
+    domain scoping.
     """
-    context = dg.get_business_diagnostic_context()
-    lines = [
-        f"Today's sales: {context['todays_sales']['total_sales']} sale(s), Le {context['todays_sales']['total_revenue']:,.2f}.",
-        f"Expenses (30 days): Le {context['expenses_30d']['total']:,.2f}.",
-        f"Forecast confidence: {context['forecast_trend']['average_confidence'] or 'N/A'}.",
-        f"Highest churn risk customers: {len(context['highest_churn_risk_customers'])} flagged.",
-        f"Blockchain ledger: {'intact' if context['blockchain_status']['is_valid'] else 'COMPROMISED'}.",
-    ]
+    domains = _detect_diagnostic_domains(message_text)
+    context = dg.get_business_diagnostic_context(domains=domains)
+
+    lines = []
+    if 'todays_sales' in context:
+        lines.append(f"Today's sales: {context['todays_sales']['total_sales']} sale(s), Le {context['todays_sales']['total_revenue']:,.2f}.")
+    if 'expenses_30d' in context:
+        lines.append(f"Expenses (30 days): Le {context['expenses_30d']['total']:,.2f}.")
+    if 'forecast_trend' in context:
+        lines.append(f"Forecast confidence: {context['forecast_trend']['average_confidence'] or 'N/A'}.")
+    if 'highest_churn_risk_customers' in context:
+        lines.append(f"Highest churn risk customers: {len(context['highest_churn_risk_customers'])} flagged.")
+    if 'blockchain_status' in context:
+        lines.append(f"Blockchain ledger: {'intact' if context['blockchain_status']['is_valid'] else 'COMPROMISED'}.")
+    if 'delivery_zone_profitability' in context:
+        lines.append(f"Delivery zones reported: {len(context['delivery_zone_profitability'])}.")
+
+    if not lines:
+        lines.append("I gathered the relevant data but couldn't summarize it into a headline — let me know what specifically you'd like to know.")
+
     return "\n".join(lines), 'business_diagnostic', context
+
+
 
 _INTENT_HANDLERS = {
     'restock_question':      _handle_restock,
@@ -290,7 +344,6 @@ _INTENT_HANDLERS = {
     'advice_question':       _handle_advice,
     'greeting':              _handle_greeting,
     'unclear':               _handle_unclear,
-    'business_diagnostic':   _handle_business_diagnostic,
 }
 
 
@@ -305,6 +358,9 @@ def process_message(session, staff_user, message_text):
         summary = generate_business_health_summary()
         reply_text = "\n".join(f"{k}: {v}" for k, v in summary.items())
         routed_to = 'business_health'
+        diagnostic_context = None
+    elif intent == 'business_diagnostic':
+        reply_text, routed_to, diagnostic_context = _handle_business_diagnostic(staff_user, message_text)
     else:
         handler = _INTENT_HANDLERS.get(intent, _handle_unclear)
         result = handler(staff_user)

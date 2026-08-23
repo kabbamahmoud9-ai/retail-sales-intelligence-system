@@ -326,33 +326,56 @@ def get_period_over_period_comparison():
 # ---------------------------------------------------------------------------
 # Cross-module diagnostic aggregator
 # ---------------------------------------------------------------------------
+# Maps each domain keyword to the diagnostic context keys it needs computed.
+# 'period_over_period_comparison' is shared by sales and expenses since it
+# reports on both — cheap to include with either, no separate domain needed.
+_DIAGNOSTIC_DOMAIN_KEYS = {
+    'sales':      {'todays_sales', 'top_sellers_7d', 'slow_movers_30d', 'period_over_period_comparison'},
+    'forecast':   {'forecast_trend'},
+    'expenses':   {'expenses_30d', 'period_over_period_comparison'},
+    'churn':      {'highest_churn_risk_customers'},
+    'delivery':   {'delivery_zone_profitability'},
+    'blockchain': {'blockchain_status'},
+}
 
-def get_business_diagnostic_context():
+_DIAGNOSTIC_KEY_COMPUTERS = {
+    'todays_sales':                    lambda: get_todays_sales_summary(),
+    'top_sellers_7d':                  lambda: get_top_selling_products(days=7, limit=3),
+    'slow_movers_30d':                 lambda: get_slow_moving_products(days=30, limit=3),
+    'forecast_trend':                  lambda: get_forecast_trend_summary(),
+    'expenses_30d':                    lambda: get_expense_summary(days=30),
+    'highest_churn_risk_customers':    lambda: get_highest_churn_risk_customers(limit=3),
+    'delivery_zone_profitability':     lambda: (get_delivery_zone_profitability() or [])[:3],
+    'blockchain_status':               lambda: get_blockchain_status(),
+    'period_over_period_comparison':   lambda: get_period_over_period_comparison(),
+}
+
+
+def get_business_diagnostic_context(domains=None):
     """
     Cross-module aggregator for open-ended 'why'/'how is business doing'
     questions — pulls a snapshot from sales, expenses, churn, delivery,
     forecast confidence, and period comparisons into one structured
     dict. Never computes new business logic itself; purely composes
     results from the functions above.
-    """
-    sales = get_todays_sales_summary()
-    top_sellers = get_top_selling_products(days=7, limit=3)
-    slow_movers = get_slow_moving_products(days=30, limit=3)
-    forecast = get_forecast_trend_summary()
-    expenses = get_expense_summary(days=30)
-    churn = get_highest_churn_risk_customers(limit=3)
-    delivery = get_delivery_zone_profitability()
-    blockchain = get_blockchain_status()
-    period_comparison = get_period_over_period_comparison()
 
-    return {
-        'todays_sales': sales,
-        'top_sellers_7d': top_sellers,
-        'slow_movers_30d': slow_movers,
-        'forecast_trend': forecast,
-        'expenses_30d': expenses,
-        'highest_churn_risk_customers': churn,
-        'delivery_zone_profitability': delivery[:3] if delivery else [],
-        'blockchain_status': blockchain,
-        'period_over_period_comparison': period_comparison,
-    }
+    `domains`: optional set of domain names (see _DIAGNOSTIC_DOMAIN_KEYS)
+    to scope which pieces get computed — e.g. {'churn'} skips the
+    delivery-zone loop and blockchain verification entirely. Passing
+    None or an empty set preserves the original behavior: every piece
+    is computed, exactly as before this parameter existed. This keeps
+    every existing caller's behavior identical unless it opts in.
+    """
+    if not domains:
+        needed_keys = set(_DIAGNOSTIC_KEY_COMPUTERS.keys())
+    else:
+        needed_keys = set()
+        for domain in domains:
+            needed_keys |= _DIAGNOSTIC_DOMAIN_KEYS.get(domain, set())
+        # Unrecognized/empty domain set still falls back to full context,
+        # so a detection miss degrades to "compute everything" rather
+        # than silently returning an empty diagnostic.
+        if not needed_keys:
+            needed_keys = set(_DIAGNOSTIC_KEY_COMPUTERS.keys())
+
+    return {key: _DIAGNOSTIC_KEY_COMPUTERS[key]() for key in needed_keys}
