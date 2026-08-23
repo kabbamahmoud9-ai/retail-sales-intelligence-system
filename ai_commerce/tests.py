@@ -356,6 +356,133 @@ class PurchaseHistoryScoringTests(TestCase):
         purchase_categories, product_order_counts = _get_customer_purchase_signal(new_customer)
         self.assertEqual(purchase_categories, set())
         self.assertEqual(product_order_counts, {})
+class StructuredContextTests(TestCase):
+    """
+    Covers _build_structured_context() (pure assembly) and
+    _render_prompt_from_context() (pure rendering) in isolation --
+    the two helpers introduced by the structured-context restructuring
+    of _build_shopping_prompt(). ShoppingPromptBudgetFactTests already
+    covers the end-to-end prompt text via _build_shopping_prompt()
+    itself; these tests target the two new internal seams directly.
+    """
+
+    def setUp(self):
+        from products.models import Category, Product
+        from ecommerce.models import OnlineCustomer, OnlineOrder, OnlineOrderItem
+        from decimal import Decimal
+
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.product = Product.objects.create(
+            product_name="Local Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.customer = OnlineCustomer.objects.create(
+            full_name="Structured Context Customer", email="structured_context@example.com", phone="0000000004",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+
+        order = OnlineOrder.objects.create(customer=self.customer, status='delivered')
+        OnlineOrderItem.objects.create(
+            order=order, product=self.product, quantity=1, unit_price=self.product.online_price,
+        )
+
+    def _sample_basket(self, budget=None):
+        from ai_commerce.services import build_validated_basket
+
+        class _FakeRec:
+            def __init__(self, product, reasoning="test reasoning"):
+                self.product = product
+                self.reasoning = reasoning
+
+        return build_validated_basket([_FakeRec(self.product)], budget=budget)
+
+    def test_customer_section_present_with_purchase_categories_for_known_customer(self):
+        from ai_commerce.llm_adapter import _build_structured_context
+
+        basket = self._sample_basket()
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {"budget": None}, basket,
+        )
+
+        self.assertFalse(context["CUSTOMER"]["is_guest"])
+        self.assertIn("Rice & Grains", context["CUSTOMER"]["purchase_categories"])
+
+    def test_customer_section_minimal_for_guest(self):
+        from ai_commerce.llm_adapter import _build_structured_context
+
+        basket = self._sample_basket()
+        context = _build_structured_context(
+            None, "I need rice", {}, {"budget": None}, basket,
+        )
+
+        self.assertTrue(context["CUSTOMER"]["is_guest"])
+        self.assertNotIn("purchase_categories", context["CUSTOMER"])
+
+    def test_calculations_section_matches_basket_values(self):
+        from decimal import Decimal
+        from ai_commerce.llm_adapter import _build_structured_context
+
+        basket = self._sample_basket(budget=Decimal("200.00"))
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {"budget": 200.0}, basket,
+        )
+
+        self.assertEqual(context["CALCULATIONS"]["total"], basket["total"])
+        self.assertEqual(context["CALCULATIONS"]["remaining"], basket["remaining"])
+        self.assertFalse(context["CALCULATIONS"]["exceeds_budget"])
+
+    def test_evidence_section_keyed_by_product_name(self):
+        from ai_commerce.llm_adapter import _build_structured_context
+
+        basket = self._sample_basket()
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {"budget": None}, basket,
+        )
+
+        self.assertIn("Local Rice 5kg", context["EVIDENCE"])
+        self.assertEqual(context["EVIDENCE"]["Local Rice 5kg"], "test reasoning")
+
+    def test_products_section_reflects_basket_items(self):
+        from ai_commerce.llm_adapter import _build_structured_context
+
+        basket = self._sample_basket()
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {"budget": None}, basket,
+        )
+
+        self.assertEqual(len(context["PRODUCTS"]), 1)
+        self.assertEqual(context["PRODUCTS"][0]["name"], "Local Rice 5kg")
+        self.assertEqual(context["PRODUCTS"][0]["stock"], 10)
+
+    def test_render_includes_all_non_empty_sections(self):
+        from ai_commerce.llm_adapter import _build_structured_context, _render_prompt_from_context
+
+        basket = self._sample_basket(budget=150.0)
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {"budget": 150.0, "shopping_purpose": "dinner"}, basket,
+        )
+        prompt = _render_prompt_from_context(context)
+
+        self.assertIn("I need rice", prompt)
+        self.assertIn("dinner", prompt)
+        self.assertIn("Local Rice 5kg", prompt)
+        self.assertIn("Rice & Grains", prompt)
+        self.assertIn("WHY THESE ITEMS WERE SELECTED", prompt)
+        self.assertIn("INSTRUCTIONS", prompt)
+
+    def test_render_omits_conversation_section_when_no_context_given(self):
+        from ai_commerce.llm_adapter import _build_structured_context, _render_prompt_from_context
+
+        basket = self._sample_basket()
+        context = _build_structured_context(
+            self.customer, "I need rice", {}, {}, basket,
+        )
+        prompt = _render_prompt_from_context(context)
+
+        self.assertNotIn("CONVERSATION CONTEXT", prompt)
 
 class ShoppingPromptBudgetFactTests(TestCase):
     def setUp(self):
