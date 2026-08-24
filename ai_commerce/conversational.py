@@ -145,6 +145,38 @@ def _extract_slots(message_text, context_state):
     return updated
 
 # ---------------------------------------------------------------------------
+# Clarification — one rule-based question when an occasion is known but
+# guest count isn't, asked at most once per session. Provider-agnostic:
+# this decision short-circuits before AI_PROVIDER is even checked, so
+# rule_based and every LLM provider behave identically here.
+# ---------------------------------------------------------------------------
+
+def _needs_clarification(intent, context_state):
+    """
+    True only when: this is a shopping query, an occasion is known
+    (this turn or a prior one), family_size is still unknown, and we
+    haven't already asked once this session. One question per session,
+    then we proceed with whatever we have -- matches every other
+    handler here, none of which block on missing information.
+    """
+    if intent != 'shopping_query':
+        return False
+    if context_state.get('clarification_asked'):
+        return False
+    if not context_state.get('shopping_purpose'):
+        return False
+    if context_state.get('family_size') is not None:
+        return False
+    return True
+
+
+def _build_clarification_reply():
+    return (
+        "How many guests are you expecting? "
+        "That'll help me suggest the right amount."
+    ), 'clarification'
+
+# ---------------------------------------------------------------------------
 # Routing — each branch calls an EXISTING function, never reimplements
 # ---------------------------------------------------------------------------
 
@@ -252,8 +284,10 @@ def process_message(session, customer, message_text):
     intent = _classify_intent(message_text)
     session.context_state = _extract_slots(message_text, session.context_state)
 
-    backend = getattr(settings, 'AI_PROVIDER', 'rule_based')
-    if backend != 'rule_based':
+    if _needs_clarification(intent, session.context_state):
+        session.context_state['clarification_asked'] = True
+        reply_text, routed_to = _build_clarification_reply()
+    elif getattr(settings, 'AI_PROVIDER', 'rule_based') != 'rule_based':
         from .llm_adapter import get_llm_response  # only imported when actually enabled
         reply_text, routed_to = get_llm_response(message_text, session.context_state, customer)
     else:
@@ -278,3 +312,29 @@ def process_message(session, customer, message_text):
     )
 
     return reply_text
+
+def _needs_clarification(intent, context_state):
+    """
+    Returns True only when: this is a shopping query, an occasion is
+    known (this turn's message or a prior one), family_size is still
+    unknown, and we haven't already asked once this session. One
+    question per session, then we proceed with whatever we have --
+    matches the reorder/credit/delivery handlers, which never block
+    on missing information either.
+    """
+    if intent != 'shopping_query':
+        return False
+    if context_state.get('clarification_asked'):
+        return False
+    if not context_state.get('shopping_purpose'):
+        return False
+    if context_state.get('family_size') is not None:
+        return False
+    return True
+
+
+def _build_clarification_reply():
+    return (
+        "How many guests are you expecting? "
+        "That'll help me suggest the right amount."
+    ), 'clarification'   

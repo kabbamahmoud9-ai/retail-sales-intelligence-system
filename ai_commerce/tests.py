@@ -483,6 +483,102 @@ class StructuredContextTests(TestCase):
         prompt = _render_prompt_from_context(context)
 
         self.assertNotIn("CONVERSATION CONTEXT", prompt)
+        
+class ClarificationQuestionTests(TestCase):
+    """
+    Covers _needs_clarification() and its wiring into process_message()
+    -- a rule-based, provider-agnostic decision made before AI_PROVIDER
+    is even checked, so it applies identically regardless of provider.
+    Asks at most once per session (clarification_asked flag), only
+    when an occasion is known and family_size is still missing.
+    """
+
+    def setUp(self):
+        from products.models import Category, Product
+        from ecommerce.models import OnlineCustomer
+        from decimal import Decimal
+
+        self.category = Category.objects.create(category_name="Rice & Grains")
+        self.product = Product.objects.create(
+            product_name="Local Rice 5kg", category=self.category,
+            unit_price=Decimal("120.00"), online_price=Decimal("120.00"),
+            quantity_in_stock=10, reorder_level=2,
+            is_active=True, is_available_online=True,
+        )
+        self.customer = OnlineCustomer.objects.create(
+            full_name="Clarification Test Customer", email="clarification_test@example.com", phone="0000000006",
+        )
+        self.customer.set_password("testpass123")
+        self.customer.save()
+
+    def test_no_clarification_needed_without_occasion(self):
+        from ai_commerce.conversational import _needs_clarification
+
+        self.assertFalse(_needs_clarification('shopping_query', {}))
+
+    def test_clarification_needed_with_occasion_and_no_family_size(self):
+        from ai_commerce.conversational import _needs_clarification
+
+        context_state = {'shopping_purpose': "I'm planning a birthday"}
+        self.assertTrue(_needs_clarification('shopping_query', context_state))
+
+    def test_no_clarification_when_family_size_already_known(self):
+        from ai_commerce.conversational import _needs_clarification
+
+        context_state = {'shopping_purpose': 'birthday party', 'family_size': 20}
+        self.assertFalse(_needs_clarification('shopping_query', context_state))
+
+    def test_no_clarification_when_already_asked_this_session(self):
+        from ai_commerce.conversational import _needs_clarification
+
+        context_state = {'shopping_purpose': 'birthday party', 'clarification_asked': True}
+        self.assertFalse(_needs_clarification('shopping_query', context_state))
+
+    def test_no_clarification_for_non_shopping_intent(self):
+        from ai_commerce.conversational import _needs_clarification
+
+        context_state = {'shopping_purpose': 'birthday party'}
+        self.assertFalse(_needs_clarification('credit_question', context_state))
+
+    def test_process_message_asks_clarification_and_sets_flag(self):
+        from ai_commerce.conversational import process_message
+        from ai_commerce.models import ConversationSession
+
+        session = ConversationSession.objects.create(
+            customer=self.customer,
+            context_state={'shopping_purpose': "I'm planning a birthday"},
+        )
+
+        reply_text = process_message(session, self.customer, "I'm planning a birthday")
+
+        self.assertIn("How many guests", reply_text)
+        session.refresh_from_db()
+        self.assertTrue(session.context_state.get('clarification_asked'))
+
+    def test_process_message_does_not_ask_twice(self):
+        from ai_commerce.conversational import process_message
+        from ai_commerce.models import ConversationSession
+
+        session = ConversationSession.objects.create(
+            customer=self.customer,
+            context_state={'shopping_purpose': "I'm planning a birthday", 'clarification_asked': True},
+        )
+
+        reply_text = process_message(session, self.customer, "I need rice")
+
+        self.assertNotIn("How many guests", reply_text)
+
+    def test_process_message_no_clarification_when_guest_count_already_given(self):
+        from ai_commerce.conversational import process_message
+        from ai_commerce.models import ConversationSession
+
+        session = ConversationSession.objects.create(customer=self.customer, context_state={})
+
+        reply_text = process_message(
+            session, self.customer, "I need food for a party; there will be 20 people",
+        )
+
+        self.assertNotIn("How many guests", reply_text)
 
 class ShoppingPromptBudgetFactTests(TestCase):
     def setUp(self):
