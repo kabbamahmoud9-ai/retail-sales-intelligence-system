@@ -22,6 +22,7 @@ downstream (which existing service gets called) stays identical either
 way, since the adapter only ever affects understanding/phrasing, never
 which business function answers the question.
 """
+import string  # add to the existing import block at the top of the file
 import re
 from django.conf import settings
 
@@ -53,15 +54,25 @@ def _classify_intent(message_text):
     Returns one of _INTENT_PATTERNS' keys, or 'shopping_query' as the
     default fallback (most messages are genuinely product requests).
 
-    Checks BOTH the lemmatized/stopword-filtered token set (for genuine
-    content words) AND the raw lowercased message (for short, common
-    trigger words like "before"/"again" that NLTK's stopword list would
-    otherwise silently strip before intent classification ever sees them).
+    Greeting detection is intentionally NOT a substring search: a
+    greeting phrase only classifies the message as 'greeting' when the
+    message (once trailing punctuation is stripped) is nothing more
+    than that phrase. This prevents a greeting combined with a real
+    request -- e.g. "Good afternoon, I need food for a birthday party"
+    -- from being misclassified as a standalone greeting and skipping
+    clarification/shopping handling. See regression tests for the
+    specific bug this fixes.
     """
     lemmas = set(_tokenize_and_lemmatize(message_text))
     message_lower = message_text.lower()
 
+    stripped = message_lower.strip().rstrip(string.punctuation + ' ').strip()
+    if stripped in _INTENT_PATTERNS['greeting']:
+        return 'greeting'
+
     for intent, keywords in _INTENT_PATTERNS.items():
+        if intent == 'greeting':
+            continue  # standalone-only check above already covers this
         for kw in keywords:
             if kw in lemmas:
                 return intent
@@ -69,7 +80,6 @@ def _classify_intent(message_text):
                 return intent
 
     return 'shopping_query'
-
 
 # ---------------------------------------------------------------------------
 # Slot extraction — lightweight, rule-based, updates ConversationSession.context_state

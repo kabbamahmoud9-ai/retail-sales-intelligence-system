@@ -314,7 +314,9 @@ def _handle_business_diagnostic(staff_user, message_text):
     if 'expenses_30d' in context:
         lines.append(f"Expenses (30 days): Le {context['expenses_30d']['total']:,.2f}.")
     if 'forecast_trend' in context:
-        lines.append(f"Forecast confidence: {context['forecast_trend']['average_confidence'] or 'N/A'}.")
+        avg_conf = context['forecast_trend']['average_confidence']
+        conf_display = f"{avg_conf:.1f}%" if avg_conf is not None else "N/A"
+        lines.append(f"Forecast confidence: {conf_display}.")
     if 'highest_churn_risk_customers' in context:
         lines.append(f"Highest churn risk customers: {len(context['highest_churn_risk_customers'])} flagged.")
     if 'blockchain_status' in context:
