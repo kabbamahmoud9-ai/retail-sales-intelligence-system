@@ -1,0 +1,123 @@
+id,category_id,supplier_id,product_name,description,unit_price,quantity_in_stock,reorder_level,is_active,is_available_online,online_price,created_at
+1,1,1,Milk,,8.00,621,5,True,True,6.00,2026-06-10 22:02:33.692579+00:00
+2,1,1,Sugar,,7.00,305,5,True,True,6.00,2026-06-10 22:20:15.379164+00:00
+3,1,1,Oat,,20.00,102,5,True,True,18.00,2026-06-24 09:56:38.508621+00:00
+4,1,1,Cheese,,10.00,475,5,True,True,10.00,2026-06-30 11:07:21.822199+00:00
+5,2,2,Cement,,135.00,238,5,True,True,140.00,2026-07-01 02:26:31.332525+00:00
+6,1,1,Butter,,8.00,113,5,True,True,20.00,2026-07-02 21:31:31.363747+00:00
+7,3,4,Coca-Cola 500ml,"Chilled cola soft drink, 500ml bottle.",10.00,370,10,True,True,12.00,2026-07-04 22:56:03.506498+00:00
+8,3,4,Fanta Orange 500ml,"Chilled orange-flavoured soft drink, 500ml bottle.",10.00,109,10,True,True,12.00,2026-07-04 22:56:08.774998+00:00
+9,3,4,Bottled Water 1.5L,"Still drinking water, 1.5 litre bottle.",5.00,133,15,True,True,6.00,2026-07-04 22:56:08.779998+00:00
+10,3,,Premium Sparkling Juice 750ml,"Premium sparkling fruit juice, party bottle, 750ml.",25.00,131,5,True,True,30.00,2026-07-04 22:56:08.787211+00:00
+11,4,,Potato Chips 150g,"Crispy salted potato chips, party pack, 150g.",8.00,231,10,True,True,9.50,2026-07-04 22:56:08.792177+00:00
+12,4,,Mixed Party Snack Pack,Assorted snack mix for parties and gatherings.,15.00,311,8,True,True,18.00,2026-07-04 22:56:09.381795+00:00
+13,4,,Budget Biscuit Pack,"Affordable plain biscuits, everyday snack pack.",4.00,118,15,True,True,5.00,2026-07-04 22:56:09.582502+00:00
+14,5,3,Local Rice 50kg Bag,"Locally grown parboiled rice, 50kg bag.",450.00,70,10,True,True,480.00,2026-07-05 01:09:23.082297+00:00
+15,5,3,Perfumed Rice 25kg Bag,"Imported fragrant long-grain rice, 25kg bag.",260.00,237,10,True,True,285.00,2026-07-05 01:09:23.819409+00:00
+16,5,3,Basmati Rice 5kg,"Premium basmati rice, 5kg pack.",65.00,461,15,True,True,75.00,2026-07-05 01:09:23.824428+00:00
+17,5,3,Brown Rice 5kg,"Whole grain brown rice, 5kg pack.",55.00,273,10,True,True,65.00,2026-07-05 01:09:23.829413+00:00
+18,5,3,Garri (Cassava Flakes) 5kg,"Roasted cassava flakes, 5kg pack.",40.00,101,15,True,True,48.00,2026-07-05 01:09:23.835614+00:00
+19,6,3,Self-Raising Flour 2kg,"All-purpose self-raising wheat flour, 2kg.",18.00,301,20,True,True,22.00,2026-07-05 01:09:23.839612+00:00
+20,6,3,Plain Flour 2kg,"Plain wheat flour, 2kg pack.",17.00,426,20,True,True,20.00,2026-07-05 01:09:23.842612+00:00
+21,6,3,Wheat Flour 10kg Bag,"Bulk wheat flour, 10kg bag for bakeries.",80.00,281,8,True,False,90.00,2026-07-05 01:09:23.846616+00:00
+22,6,3,Corn Flour 1kg,"Fine corn flour, 1kg pack.",12.00,337,15,True,True,15.00,2026-07-05 01:09:23.851615+00:00
+23,6,3,Cassava Flour 2kg,"Fine cassava flour, 2kg pack.",20.00,50,15,True,True,24.00,2026-07-05 01:09:23.858860+00:00
+24,7,3,White Granulated Sugar 1kg,"Fine white granulated sugar, 1kg.",15.00,630,25,True,True,18.00,2026-07-05 01:09:23.861875+00:00
+25,7,3,Brown Sugar 1kg,"Unrefined brown sugar, 1kg.",17.00,352,15,True,True,20.00,2026-07-05 01:09:23.865873+00:00
+26,7,3,Sugar Cubes 500g,"Sugar cubes for tea and coffee, 500g box.",10.00,539,10,True,True,13.00,2026-07-05 01:09:23.867858+00:00
+27,7,3,Icing Sugar 500g,"Fine icing sugar for baking, 500g.",12.00,102,10,True,True,15.00,2026-07-05 01:09:23.870873+00:00
+28,7,3,Sugar 5kg Bulk Bag,"Bulk white sugar, 5kg bag.",65.00,98,10,True,True,75.00,2026-07-05 01:09:23.875744+00:00
+29,8,3,Palm Oil 1L,"Pure red palm oil, 1 litre bottle.",22.00,405,15,True,True,26.00,2026-07-05 01:09:23.878744+00:00
+30,8,3,Vegetable Oil 1L,"Refined vegetable cooking oil, 1 litre.",20.00,528,15,True,True,24.00,2026-07-05 01:09:23.881759+00:00
+31,8,3,Groundnut Oil 1L,"Pure groundnut cooking oil, 1 litre.",25.00,301,12,True,True,29.00,2026-07-05 01:09:23.883744+00:00
+32,8,3,Sunflower Oil 1L Premium,"Premium cold-pressed sunflower oil, 1 litre.",35.00,302,8,True,True,42.00,2026-07-05 01:09:23.886743+00:00
+33,8,3,Olive Oil 500ml Premium,"Extra virgin olive oil, premium import, 500ml.",55.00,791,5,True,True,65.00,2026-07-05 01:09:23.889742+00:00
+34,9,3,Maggi Cubes Pack of 10,"Seasoning cubes, pack of 10.",8.00,100,25,True,True,10.00,2026-07-05 01:09:23.892742+00:00
+35,9,3,Curry Powder 100g,"Blended curry powder, 100g.",9.00,398,15,True,True,11.00,2026-07-05 01:09:23.896607+00:00
+36,9,3,Black Pepper 100g,"Ground black pepper, 100g.",14.00,408,10,True,True,17.00,2026-07-05 01:09:23.899607+00:00
+37,9,3,Ginger Powder 100g,"Dried ground ginger, 100g.",10.00,312,10,True,True,12.00,2026-07-05 01:09:23.902593+00:00
+38,9,3,Onion & Garlic Seasoning Mix 200g,"Blended onion and garlic seasoning, 200g.",13.00,289,12,True,True,16.00,2026-07-05 01:09:23.905606+00:00
+39,10,3,Canned Sardines 125g,"Sardines in vegetable oil, 125g tin.",8.00,296,20,True,True,10.00,2026-07-05 01:09:23.907590+00:00
+40,10,3,Canned Corned Beef 340g,"Corned beef, 340g tin.",22.00,197,15,True,True,26.00,2026-07-05 01:09:23.910603+00:00
+41,10,3,Canned Tomatoes 400g,"Chopped tomatoes in juice, 400g tin.",9.00,141,20,True,True,11.00,2026-07-05 01:09:23.913591+00:00
+42,10,3,Canned Baked Beans 400g,"Baked beans in tomato sauce, 400g tin.",10.00,400,18,True,True,12.00,2026-07-05 01:09:23.917699+00:00
+43,10,3,Canned Mackerel 155g,"Mackerel in tomato sauce, 155g tin.",9.00,262,15,True,True,11.00,2026-07-05 01:09:23.920698+00:00
+44,3,4,Malta Guinness 330ml,"Non-alcoholic malt drink, 330ml bottle.",9.00,249,20,True,True,11.00,2026-07-05 01:09:23.922711+00:00
+45,3,4,Tampico Juice 1L,"Tropical fruit juice drink, 1 litre.",14.00,769,15,True,True,17.00,2026-07-05 01:09:23.925696+00:00
+46,3,4,Ribena Blackcurrant 1L,"Blackcurrant fruit juice drink, 1 litre.",18.00,590,12,True,True,22.00,2026-07-05 01:09:23.928711+00:00
+47,3,4,Vimto Juice 1L,"Fruit-flavoured juice drink, 1 litre.",15.00,161,12,True,True,18.00,2026-07-05 01:09:23.930716+00:00
+48,11,4,Sprite 500ml,"Chilled lemon-lime soft drink, 500ml bottle.",10.00,310,10,True,True,12.00,2026-07-05 01:09:24.175851+00:00
+49,11,4,Bottled Water 500ml,"Still drinking water, 500ml bottle, single serve.",3.00,119,20,True,True,4.00,2026-07-05 01:09:24.182421+00:00
+50,12,5,Fresh Milk 1L,"Pasteurized fresh cow milk, 1 litre.",20.00,214,10,True,True,24.00,2026-07-05 01:09:24.188468+00:00
+51,12,5,Powdered Milk 400g,"Full cream powdered milk, 400g tin.",28.00,495,15,True,True,33.00,2026-07-05 01:09:24.193417+00:00
+52,12,5,Evaporated Milk 170g,"Evaporated milk, 170g tin.",6.00,124,20,True,True,8.00,2026-07-05 01:09:24.199408+00:00
+53,12,5,Butter 250g,"Salted dairy butter, 250g pack.",24.00,277,10,True,True,28.00,2026-07-05 01:09:24.205602+00:00
+54,12,5,Cheese Spread 200g,"Processed cheese spread, 200g tub.",20.00,66,8,True,True,24.00,2026-07-05 01:09:24.827299+00:00
+55,13,5,Sliced White Bread 600g,"Fresh sliced white loaf, 600g.",12.00,415,15,True,True,14.00,2026-07-05 01:09:24.834357+00:00
+56,13,5,Whole Wheat Bread 600g,"Fresh sliced whole wheat loaf, 600g.",14.00,193,10,True,True,16.00,2026-07-05 01:09:24.841072+00:00
+57,13,5,Dinner Rolls Pack of 6,"Soft dinner rolls, pack of 6.",10.00,95,10,True,True,12.00,2026-07-05 01:09:24.847130+00:00
+58,13,5,Meat Pie Pack of 4,"Savoury meat pies, pack of 4.",18.00,119,8,True,True,21.00,2026-07-05 01:09:24.852127+00:00
+59,13,5,Doughnuts Pack of 6,"Fresh glazed doughnuts, pack of 6.",15.00,217,8,True,True,18.00,2026-07-05 01:09:24.858071+00:00
+60,14,6,Digestive Biscuits 200g,"Wholewheat digestive biscuits, 200g pack.",9.00,319,15,True,True,11.00,2026-07-05 01:09:24.865050+00:00
+61,14,6,Cream Crackers 200g,"Plain cream crackers, 200g pack.",8.00,325,15,True,True,10.00,2026-07-05 01:09:24.870050+00:00
+62,14,6,Chin Chin Snack Pack 250g,"Sweet fried pastry snack, 250g pack.",11.00,204,12,True,True,13.00,2026-07-05 01:09:24.876049+00:00
+63,14,6,Plantain Chips 150g,"Crispy fried plantain chips, 150g pack.",8.00,132,18,True,True,10.00,2026-07-05 01:09:24.882078+00:00
+64,14,6,Groundnut Snack Pack 200g,"Roasted salted groundnuts, 200g pack.",7.00,164,15,True,True,9.00,2026-07-05 01:09:24.888103+00:00
+65,15,4,Lipton Tea Bags Pack of 25,"Black tea bags, pack of 25.",12.00,214,15,True,True,15.00,2026-07-05 01:09:24.893102+00:00
+66,15,4,Green Tea Bags Pack of 25,"Green tea bags, pack of 25.",15.00,628,10,True,True,18.00,2026-07-05 01:09:24.899248+00:00
+67,15,4,Instant Coffee 200g,"Instant coffee granules, 200g jar.",30.00,208,10,True,True,35.00,2026-07-05 01:09:24.905999+00:00
+68,15,4,Milo 400g,"Chocolate malt drink powder, 400g tin.",26.00,608,15,True,True,30.00,2026-07-05 01:09:24.910973+00:00
+69,15,4,Ovaltine 400g,"Malted milk drink powder, 400g tin.",27.00,418,8,True,True,31.00,2026-07-05 01:09:24.914938+00:00
+70,16,7,Frozen Chicken Drumsticks 1kg,"Frozen chicken drumsticks, 1kg pack.",45.00,437,10,True,True,52.00,2026-07-05 01:09:24.920292+00:00
+71,16,7,Frozen Fish (Bonga) 1kg,"Frozen bonga fish, 1kg pack.",25.00,184,12,True,True,30.00,2026-07-05 01:09:24.924086+00:00
+72,16,7,Frozen Mixed Vegetables 500g,"Frozen mixed vegetables, 500g pack.",18.00,211,10,True,True,22.00,2026-07-05 01:09:24.928107+00:00
+73,16,7,Frozen French Fries 1kg,"Frozen potato fries, 1kg pack.",22.00,116,8,True,True,26.00,2026-07-05 01:09:24.932136+00:00
+74,16,7,Ice Cream Tub 1L,"Vanilla ice cream, 1 litre tub.",35.00,513,6,True,True,42.00,2026-07-05 01:09:24.936135+00:00
+75,17,8,Bar Soap Pack of 3,"Antibacterial bar soap, pack of 3.",9.00,112,20,True,True,11.00,2026-07-05 01:09:24.941066+00:00
+76,17,8,Body Lotion 400ml,"Moisturizing body lotion, 400ml bottle.",18.00,294,12,True,True,22.00,2026-07-05 01:09:24.945100+00:00
+77,17,8,Shower Gel 250ml,"Refreshing shower gel, 250ml bottle.",15.00,676,12,True,True,18.00,2026-07-05 01:09:24.948099+00:00
+78,17,8,Toothpaste 100ml,"Fluoride toothpaste, 100ml tube.",10.00,308,20,True,True,12.00,2026-07-05 01:09:24.950064+00:00
+79,17,8,Toothbrush Pack of 2,"Medium-bristle toothbrushes, pack of 2.",6.00,139,18,True,True,8.00,2026-07-05 01:09:24.954064+00:00
+80,18,8,Toilet Tissue Pack of 4,"Soft toilet tissue rolls, pack of 4.",12.00,61,18,True,True,15.00,2026-07-05 01:09:24.956100+00:00
+81,18,8,Sanitary Pads Pack of 10,"Absorbent sanitary pads, pack of 10.",14.00,53,15,True,True,17.00,2026-07-05 01:09:24.959736+00:00
+82,18,8,Shaving Razor Pack of 3,"Disposable shaving razors, pack of 3.",8.00,142,12,True,True,10.00,2026-07-05 01:09:24.962740+00:00
+83,18,8,Deodorant Spray 150ml,"Long-lasting deodorant spray, 150ml.",16.00,270,12,True,True,19.00,2026-07-05 01:09:24.965737+00:00
+84,18,8,Hand Sanitizer 250ml,"Alcohol-based hand sanitizer, 250ml.",12.00,277,15,True,True,15.00,2026-07-05 01:09:24.968737+00:00
+85,19,9,Baby Diapers Pack of 30 (Size 3),"Disposable baby diapers, size 3, pack of 30.",45.00,238,10,True,True,52.00,2026-07-05 01:09:24.971751+00:00
+86,19,9,Baby Formula 400g,"Infant milk formula, 400g tin.",60.00,90,8,True,True,68.00,2026-07-05 01:09:24.974754+00:00
+87,19,9,Baby Wipes Pack of 80,"Gentle baby wipes, pack of 80.",15.00,43,12,True,True,18.00,2026-07-05 01:09:24.977751+00:00
+88,19,9,Baby Lotion 200ml,"Gentle moisturizing baby lotion, 200ml.",14.00,220,10,True,True,17.00,2026-07-05 01:09:24.980397+00:00
+89,19,9,Baby Cereal 250g,"Fortified infant cereal, 250g pack.",22.00,178,10,True,True,26.00,2026-07-05 01:09:24.984362+00:00
+90,20,10,Liquid Detergent 1L,"Multi-surface liquid detergent, 1 litre.",16.00,336,15,True,True,19.00,2026-07-05 01:09:24.987373+00:00
+91,20,10,Bar Washing Soap Pack of 3,"Laundry bar soap, pack of 3.",10.00,366,18,True,True,12.00,2026-07-05 01:09:24.990366+00:00
+92,20,10,Bleach 1L,"Household bleach, 1 litre bottle.",9.00,231,15,True,True,11.00,2026-07-05 01:09:24.993361+00:00
+93,20,10,Dishwashing Liquid 500ml,"Grease-cutting dishwashing liquid, 500ml.",12.00,234,15,True,True,15.00,2026-07-05 01:09:24.995358+00:00
+94,20,10,All-Purpose Cleaner Spray 500ml,"Multi-surface cleaner spray, 500ml.",14.00,181,12,True,True,17.00,2026-07-05 01:09:25.001360+00:00
+95,21,10,Matches Pack of 10 Boxes,"Safety matches, pack of 10 boxes.",5.00,323,20,True,True,6.00,2026-07-05 01:09:25.004360+00:00
+96,21,10,Candles Pack of 6,"Household candles, pack of 6.",8.00,162,15,True,True,10.00,2026-07-05 01:09:25.033834+00:00
+97,21,10,Insecticide Spray 300ml,"Insect-killing spray, 300ml can.",18.00,297,10,True,True,22.00,2026-07-05 01:09:25.036841+00:00
+98,21,10,Trash Bags Roll of 30,"Heavy-duty trash bags, roll of 30.",12.00,296,12,True,True,15.00,2026-07-05 01:09:25.040400+00:00
+99,21,10,Kitchen Foil Roll,"Aluminium kitchen foil, standard roll.",10.00,301,12,True,True,12.00,2026-07-05 01:09:25.043398+00:00
+100,22,11,Exercise Books Pack of 5,"Ruled exercise books, pack of 5.",8.00,80,18,True,True,10.00,2026-07-05 01:09:25.046387+00:00
+101,22,11,Ballpoint Pens Pack of 10,"Blue ink ballpoint pens, pack of 10.",6.00,171,20,True,True,8.00,2026-07-05 01:09:25.050397+00:00
+102,22,11,A4 Printing Paper Ream,"A4 printing paper, 500 sheets.",25.00,222,10,True,True,30.00,2026-07-05 01:09:25.053395+00:00
+103,22,11,Pencils Pack of 12,"HB graphite pencils, pack of 12.",5.00,76,15,True,True,7.00,2026-07-05 01:09:25.055404+00:00
+104,22,11,Correction Fluid,"White correction fluid, single bottle.",4.00,86,12,True,True,5.00,2026-07-05 01:09:25.059007+00:00
+105,23,8,Multivitamin Tablets Pack of 30,"Daily multivitamin supplement, 30 tablets.",20.00,304,10,True,True,24.00,2026-07-05 01:09:25.063027+00:00
+106,23,8,Paracetamol Tablets Pack of 20,"Pain relief tablets, pack of 20.",6.00,194,20,True,True,8.00,2026-07-05 01:09:25.066023+00:00
+107,23,8,Oral Rehydration Salts Pack of 10,"Rehydration salts sachets, pack of 10.",10.00,230,15,True,True,12.00,2026-07-05 01:09:25.069012+00:00
+108,23,8,First Aid Plasters Pack of 20,"Adhesive plasters, pack of 20.",7.00,99,12,True,True,9.00,2026-07-05 01:09:25.072010+00:00
+109,23,8,Antiseptic Liquid 250ml,"Antiseptic disinfectant liquid, 250ml.",14.00,363,10,True,True,17.00,2026-07-05 01:09:25.075010+00:00
+110,24,6,Assorted Chocolate Bars Pack of 5,"Assorted milk chocolate bars, pack of 5.",18.00,102,12,True,True,22.00,2026-07-05 01:09:25.078010+00:00
+111,24,6,Boiled Sweets 250g,"Assorted fruit-flavoured boiled sweets, 250g.",9.00,468,15,True,True,11.00,2026-07-05 01:09:25.150706+00:00
+112,24,6,Chewing Gum Pack of 10,"Mint chewing gum, pack of 10.",6.00,75,18,True,True,8.00,2026-07-05 01:09:25.153705+00:00
+113,24,6,Lollipops Pack of 20,"Assorted fruit lollipops, pack of 20.",8.00,204,12,True,True,10.00,2026-07-05 01:09:25.157705+00:00
+114,24,6,Marshmallows 200g,"Soft vanilla marshmallows, 200g pack.",10.00,227,10,True,True,12.00,2026-07-05 01:09:25.161179+00:00
+115,25,12,Fresh Tomatoes 1kg,"Ripe fresh tomatoes, 1kg.",12.00,294,15,True,True,15.00,2026-07-05 16:36:03.734973+00:00
+116,25,12,Onions 1kg,"Fresh red onions, 1kg.",10.00,723,18,True,True,12.00,2026-07-05 16:36:03.873965+00:00
+117,25,12,Cucumber (Each),"Fresh garden cucumber, sold each.",3.00,101,15,True,True,4.00,2026-07-05 16:36:03.879966+00:00
+118,25,12,Lettuce Head (Each),"Fresh lettuce head, sold each.",6.00,53,12,True,True,8.00,2026-07-05 16:36:03.885965+00:00
+119,25,12,Green Bell Peppers 500g,"Fresh green bell peppers, 500g.",14.00,138,12,True,True,17.00,2026-07-05 16:36:03.892024+00:00
+120,25,12,Garden Eggs 1kg,"Fresh local garden eggs, 1kg.",9.00,393,15,True,True,11.00,2026-07-05 16:36:03.898025+00:00
+121,25,12,Carrots 500g,"Fresh carrots, 500g.",8.00,63,12,True,True,10.00,2026-07-05 16:36:03.903022+00:00
+122,25,12,Cabbage Head (Each),"Fresh cabbage head, sold each.",7.00,306,10,True,True,9.00,2026-07-05 16:36:03.907964+00:00

@@ -1,0 +1,171 @@
+id,full_name,email,phone,address,credit_limit,credit_balance,is_active,created_at,lifetime_spending,total_orders,last_purchase_date,trust_score
+6,Demo VIP Customer 1,vip1@demo.retailintelligence.local,0800770487,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:15.768475+00:00,2748.00,13,2026-07-10 14:52:17.509190+00:00,85
+7,Demo VIP Customer 2,vip2@demo.retailintelligence.local,0800802258,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:18.236691+00:00,4749.00,17,2026-07-07 14:52:19.900855+00:00,85
+8,Demo VIP Customer 3,vip3@demo.retailintelligence.local,0800965845,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:20.335307+00:00,5682.00,16,2026-07-05 14:52:21.968088+00:00,85
+9,Demo Frequent Customer 1,frequent1@demo.retailintelligence.local,0800751051,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:22.588249+00:00,394.00,8,2026-06-30 14:52:24.307328+00:00,85
+10,Demo Frequent Customer 2,frequent2@demo.retailintelligence.local,0800388375,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:24.517326+00:00,1098.50,10,2026-06-30 14:52:26.134983+00:00,85
+11,Demo Frequent Customer 3,frequent3@demo.retailintelligence.local,0800585188,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:26.564205+00:00,1044.00,10,2026-07-02 14:52:28.225174+00:00,85
+12,Demo Frequent Customer 4,frequent4@demo.retailintelligence.local,0800145934,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:28.508479+00:00,685.00,7,2026-06-26 14:52:30.167441+00:00,85
+13,Demo Premium Customer 1,premium1@demo.retailintelligence.local,0800260448,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:30.463292+00:00,987.50,4,2026-07-01 14:52:32.174449+00:00,85
+14,Demo Premium Customer 2,premium2@demo.retailintelligence.local,0800856157,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:32.346964+00:00,1147.50,4,2026-06-30 14:52:34.019209+00:00,85
+15,Demo Premium Customer 3,premium3@demo.retailintelligence.local,0800428930,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:34.129384+00:00,1480.00,4,2026-07-02 14:52:35.766188+00:00,85
+16,Demo Loyal Customer 1,loyal1@demo.retailintelligence.local,0800212512,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:35.874724+00:00,671.00,5,2026-06-27 14:52:37.446896+00:00,85
+17,Demo Loyal Customer 2,loyal2@demo.retailintelligence.local,0800166857,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:38.052790+00:00,312.00,3,2026-07-04 14:52:39.876024+00:00,85
+18,Demo Loyal Customer 3,loyal3@demo.retailintelligence.local,0800345536,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:39.992283+00:00,293.00,5,2026-06-18 14:52:41.623552+00:00,85
+19,Demo AtRisk Customer 1,atrisk1@demo.retailintelligence.local,0800680189,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:41.799836+00:00,460.00,7,2026-03-06 14:52:43.389714+00:00,85
+20,Demo AtRisk Customer 2,atrisk2@demo.retailintelligence.local,0800498535,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:43.661593+00:00,363.00,3,2026-02-22 14:52:45.569901+00:00,85
+21,Demo AtRisk Customer 3,atrisk3@demo.retailintelligence.local,0800755395,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:45.761466+00:00,524.00,6,2026-03-05 14:52:47.413205+00:00,85
+22,Demo PriceSensitive Customer 1,pricesensitive1@demo.retailintelligence.local,0800295440,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:48.069233+00:00,157.80,3,2026-06-19 14:52:49.883023+00:00,85
+23,Demo PriceSensitive Customer 2,pricesensitive2@demo.retailintelligence.local,0800953047,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:49.998430+00:00,199.80,2,2026-06-06 14:52:51.591435+00:00,85
+24,Demo New Customer 1,new1@demo.retailintelligence.local,0800238320,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:52.056661+00:00,11.00,1,2026-07-10 14:52:53.658181+00:00,85
+25,Demo New Customer 2,new2@demo.retailintelligence.local,0800722518,"123 Demo Street, Freetown",0.00,0.00,True,2026-07-11 14:52:53.682214+00:00,117.00,1,2026-07-07 14:52:55.236191+00:00,85
+188,Fanta Fofanah,fanta.fofanah.0@seed.retailintel.local,+23274004485,"68 Fofanah Street, Freetown",1000.00,0.00,True,2026-07-10 12:58:18.781647+00:00,510.06,2,2026-08-26 12:58:18.781647+00:00,100
+189,Kadija Kanu,kadija.kanu.1@seed.retailintel.local,+23277670955,"81 Kanu Street, Freetown",0.00,0.00,True,2026-08-21 12:58:18.781647+00:00,435.22,1,2026-08-22 12:58:18.781647+00:00,85
+190,Momoh Sillah,momoh.sillah.2@seed.retailintel.local,+23271677407,"19 Sillah Street, Freetown",2000.00,0.00,True,2026-08-20 12:58:18.781647+00:00,446.76,1,2026-08-26 12:58:18.781647+00:00,100
+191,Adama Conteh,adama.conteh.3@seed.retailintel.local,+23275855396,"18 Conteh Street, Freetown",0.00,0.00,True,2026-06-07 12:58:18.781647+00:00,351.15,2,2026-08-23 12:58:18.781647+00:00,85
+192,Abu Kanneh,abu.kanneh.4@seed.retailintel.local,+23279113685,"181 Kanneh Street, Freetown",500.00,79.08,True,2026-03-30 12:58:18.781647+00:00,451.29,8,2026-08-26 12:58:18.781647+00:00,95
+193,Lamin Tholley,lamin.tholley.5@seed.retailintel.local,+23270131249,"171 Tholley Street, Freetown",2000.00,136.08,True,2026-03-20 12:58:18.781647+00:00,947.12,6,2026-06-23 12:58:18.781647+00:00,98
+194,Brima Bangura,brima.bangura.6@seed.retailintel.local,+23272253031,"68 Bangura Street, Freetown",0.00,0.00,True,2026-06-24 12:58:18.781647+00:00,196.43,2,2026-08-25 12:58:18.781647+00:00,85
+195,Sheku Gbla,sheku.gbla.7@seed.retailintel.local,+23272607983,"70 Gbla Street, Freetown",500.00,224.07,True,2026-01-15 12:58:18.781647+00:00,753.68,17,2026-08-24 12:58:18.781647+00:00,87
+196,Fanta Fofanah,fanta.fofanah.8@seed.retailintel.local,+23273415796,"176 Fofanah Street, Freetown",500.00,165.52,True,2026-03-16 12:58:18.781647+00:00,586.97,6,2026-06-19 12:58:18.781647+00:00,90
+197,Adama Sesay,adama.sesay.9@seed.retailintel.local,+23271548511,"163 Sesay Street, Freetown",1000.00,930.97,True,2025-12-16 12:58:18.781647+00:00,1908.01,10,2026-08-26 12:58:18.781647+00:00,63
+198,Mohamed Kamara,mohamed.kamara.10@seed.retailintel.local,+23275596150,"198 Kamara Street, Freetown",0.00,0.00,True,2026-03-23 12:58:18.781647+00:00,628.79,11,2026-08-23 12:58:18.781647+00:00,85
+199,Adama Turay,adama.turay.11@seed.retailintel.local,+23277412769,"142 Turay Street, Freetown",1000.00,382.13,True,2026-03-24 12:58:18.781647+00:00,841.46,5,2026-06-19 12:58:18.781647+00:00,89
+200,Ibrahim Koroma,ibrahim.koroma.12@seed.retailintel.local,+23272500715,"140 Koroma Street, Freetown",0.00,0.00,True,2026-04-01 12:58:18.781647+00:00,3240.83,11,2026-08-26 12:58:18.781647+00:00,85
+201,Yeanoh Gbla,yeanoh.gbla.13@seed.retailintel.local,+23272484601,"111 Gbla Street, Freetown",0.00,0.00,True,2026-01-14 12:58:18.781647+00:00,1414.57,15,2026-08-21 12:58:18.781647+00:00,85
+202,Sorie Sesay,sorie.sesay.14@seed.retailintel.local,+23276003042,"54 Sesay Street, Freetown",0.00,0.00,True,2026-08-26 12:58:18.781647+00:00,92.74,1,2026-08-26 12:58:18.781647+00:00,85
+203,Sorie Gbla,sorie.gbla.15@seed.retailintel.local,+23276817881,"159 Gbla Street, Freetown",0.00,0.00,True,2026-03-15 12:58:18.781647+00:00,521.19,7,2026-07-16 12:58:18.781647+00:00,85
+204,Alhaji Turay,alhaji.turay.16@seed.retailintel.local,+23272970445,"106 Turay Street, Freetown",0.00,0.00,True,2026-04-21 12:58:18.781647+00:00,669.26,2,2026-08-22 12:58:18.781647+00:00,85
+205,Osman Fofanah,osman.fofanah.17@seed.retailintel.local,+23276907400,"172 Fofanah Street, Freetown",0.00,0.00,True,2026-01-27 12:58:18.781647+00:00,304.45,4,2026-08-22 12:58:18.781647+00:00,85
+206,Lamin Bangura,lamin.bangura.18@seed.retailintel.local,+23276417985,"10 Bangura Street, Freetown",1000.00,74.85,True,2026-06-10 12:58:18.781647+00:00,155.07,2,2026-08-23 12:58:18.781647+00:00,98
+207,Aisha Kanneh,aisha.kanneh.19@seed.retailintel.local,+23275866294,"79 Kanneh Street, Freetown",0.00,0.00,True,2026-03-27 12:58:18.781647+00:00,378.16,4,2026-08-23 12:58:18.781647+00:00,85
+208,Brima Kargbo,brima.kargbo.20@seed.retailintel.local,+23276685149,"85 Kargbo Street, Freetown",500.00,180.36,True,2026-06-11 12:58:18.781647+00:00,302.37,2,2026-08-24 12:58:18.781647+00:00,89
+209,Ramatu Jalloh,ramatu.jalloh.21@seed.retailintel.local,+23275891254,"165 Jalloh Street, Freetown",2000.00,218.49,True,2025-12-01 12:58:18.781647+00:00,1061.38,19,2026-08-24 12:58:18.781647+00:00,97
+210,Aisha Gbla,aisha.gbla.22@seed.retailintel.local,+23275555772,"8 Gbla Street, Freetown",0.00,0.00,True,2025-11-09 12:58:18.781647+00:00,1789.15,16,2026-08-21 12:58:18.781647+00:00,85
+211,Adama Turay,adama.turay.23@seed.retailintel.local,+23279740679,"68 Turay Street, Freetown",0.00,0.00,True,2026-03-08 12:58:18.781647+00:00,910.85,12,2026-08-26 12:58:18.781647+00:00,85
+212,Sahr Sankoh,sahr.sankoh.24@seed.retailintel.local,+23275262632,"112 Sankoh Street, Freetown",2000.00,0.00,True,2026-08-24 12:58:18.781647+00:00,66.29,1,2026-08-24 12:58:18.781647+00:00,100
+213,Ibrahim Bah,ibrahim.bah.25@seed.retailintel.local,+23279673542,"49 Bah Street, Freetown",500.00,0.00,True,2026-05-27 12:58:18.781647+00:00,470.61,2,2026-08-26 12:58:18.781647+00:00,100
+214,Sahr Kamara,sahr.kamara.26@seed.retailintel.local,+23278722815,"138 Kamara Street, Freetown",0.00,0.00,True,2026-08-21 12:58:18.781647+00:00,12.98,1,2026-08-23 12:58:18.781647+00:00,85
+215,Fatmata Fofanah,fatmata.fofanah.27@seed.retailintel.local,+23275266630,"170 Fofanah Street, Freetown",0.00,0.00,True,2026-03-29 12:58:18.781647+00:00,1047.12,8,2026-08-22 12:58:18.781647+00:00,85
+216,Foday Tholley,foday.tholley.28@seed.retailintel.local,+23275188935,"171 Tholley Street, Freetown",1000.00,162.41,True,2026-02-20 12:58:18.781647+00:00,295.20,5,2026-06-18 12:58:18.781647+00:00,95
+217,Fanta Kanu,fanta.kanu.29@seed.retailintel.local,+23279301497,"33 Kanu Street, Freetown",0.00,0.00,True,2026-04-03 12:58:18.781647+00:00,221.75,3,2026-08-23 12:58:18.781647+00:00,85
+218,Hawa Turay,hawa.turay.30@seed.retailintel.local,+23279548001,"78 Turay Street, Freetown",1000.00,0.00,True,2026-04-30 12:58:18.781647+00:00,1114.24,9,2026-08-26 12:58:18.781647+00:00,100
+219,Aminata Kanu,aminata.kanu.31@seed.retailintel.local,+23274813613,"54 Kanu Street, Freetown",1000.00,190.46,True,2026-04-10 12:58:18.781647+00:00,971.06,10,2026-08-24 12:58:18.781647+00:00,94
+220,Momoh Fofanah,momoh.fofanah.32@seed.retailintel.local,+23277801207,"114 Fofanah Street, Freetown",1000.00,71.76,True,2026-03-11 12:58:18.781647+00:00,258.00,3,2026-05-04 12:58:18.781647+00:00,98
+221,Mabinty Vandy,mabinty.vandy.33@seed.retailintel.local,+23272846949,"169 Vandy Street, Freetown",0.00,0.00,True,2026-05-15 12:58:18.781647+00:00,243.57,4,2026-07-20 12:58:18.781647+00:00,85
+222,Brima Barrie,brima.barrie.34@seed.retailintel.local,+23275623525,"24 Barrie Street, Freetown",0.00,0.00,True,2026-02-14 12:58:18.781647+00:00,507.57,4,2026-08-21 12:58:18.781647+00:00,85
+223,Alhaji Kargbo,alhaji.kargbo.35@seed.retailintel.local,+23272472189,"7 Kargbo Street, Freetown",0.00,0.00,True,2026-02-20 12:58:18.781647+00:00,878.72,8,2026-07-10 12:58:18.781647+00:00,85
+224,Alusine Barrie,alusine.barrie.36@seed.retailintel.local,+23271221854,"117 Barrie Street, Freetown",1000.00,0.00,True,2026-06-23 12:58:18.781647+00:00,113.15,2,2026-08-23 12:58:18.781647+00:00,100
+225,Yeanoh Kargbo,yeanoh.kargbo.37@seed.retailintel.local,+23276442089,"127 Kargbo Street, Freetown",1000.00,763.30,True,2025-12-31 12:58:18.781647+00:00,1435.19,18,2026-08-21 12:58:18.781647+00:00,77
+226,Kadija Kamara,kadija.kamara.38@seed.retailintel.local,+23271788238,"200 Kamara Street, Freetown",1000.00,0.00,True,2026-06-05 12:58:18.781647+00:00,717.99,2,2026-08-26 12:58:18.781647+00:00,100
+227,Lamin Tholley,lamin.tholley.39@seed.retailintel.local,+23277793853,"13 Tholley Street, Freetown",2000.00,168.96,True,2026-06-24 12:58:18.781647+00:00,168.96,2,2026-08-23 12:58:18.781647+00:00,97
+228,Musa Bangura,musa.bangura.40@seed.retailintel.local,+23277658158,"35 Bangura Street, Freetown",1000.00,0.00,True,2026-08-12 12:58:18.781647+00:00,885.55,1,2026-08-25 12:58:18.781647+00:00,100
+229,Santigie Barrie,santigie.barrie.41@seed.retailintel.local,+23275323376,"194 Barrie Street, Freetown",1000.00,0.00,True,2026-04-02 12:58:18.781647+00:00,1293.41,6,2026-07-14 12:58:18.781647+00:00,100
+230,Sheku Tholley,sheku.tholley.42@seed.retailintel.local,+23277159521,"141 Tholley Street, Freetown",1000.00,284.96,True,2026-05-04 12:58:18.781647+00:00,462.94,4,2026-06-27 12:58:18.781647+00:00,91
+231,Sheku Vandy,sheku.vandy.43@seed.retailintel.local,+23277550917,"67 Vandy Street, Freetown",0.00,0.00,True,2026-03-11 12:58:18.781647+00:00,680.34,11,2026-08-25 12:58:18.781647+00:00,85
+232,Adama Tholley,adama.tholley.44@seed.retailintel.local,+23278130188,"161 Tholley Street, Freetown",0.00,0.00,True,2026-02-27 12:58:18.781647+00:00,1125.70,13,2026-08-26 12:58:18.781647+00:00,85
+233,Fatmata Kanu,fatmata.kanu.45@seed.retailintel.local,+23273934149,"70 Kanu Street, Freetown",500.00,0.00,True,2026-06-20 12:58:18.781647+00:00,222.17,2,2026-08-21 12:58:18.781647+00:00,100
+234,Santigie Koroma,santigie.koroma.46@seed.retailintel.local,+23272321531,"39 Koroma Street, Freetown",0.00,0.00,True,2026-07-04 12:58:18.781647+00:00,445.50,2,2026-08-21 12:58:18.781647+00:00,85
+235,Isatu Kargbo,isatu.kargbo.47@seed.retailintel.local,+23271077581,"107 Kargbo Street, Freetown",1000.00,382.51,True,2026-02-28 12:58:18.781647+00:00,823.67,10,2026-08-13 12:58:18.781647+00:00,89
+236,Zainab Kabba,zainab.kabba.48@seed.retailintel.local,+23271044645,"53 Kabba Street, Freetown",1000.00,0.00,True,2026-03-13 12:58:18.781647+00:00,452.48,3,2026-08-22 12:58:18.781647+00:00,100
+237,Ramatu Sillah,ramatu.sillah.49@seed.retailintel.local,+23270327691,"196 Sillah Street, Freetown",2000.00,1004.90,True,2025-12-04 12:58:18.781647+00:00,2506.84,16,2026-08-21 12:58:18.781647+00:00,85
+238,Aminata Sankoh,aminata.sankoh.50@seed.retailintel.local,+23275009888,"193 Sankoh Street, Freetown",1000.00,376.44,True,2026-04-20 12:58:18.781647+00:00,1292.15,8,2026-08-23 12:58:18.781647+00:00,89
+239,Aisha Kabba,aisha.kabba.51@seed.retailintel.local,+23279029842,"192 Kabba Street, Freetown",2000.00,161.25,True,2026-01-08 12:58:18.781647+00:00,1410.49,18,2026-08-26 12:58:18.781647+00:00,98
+240,Marie Mansaray,marie.mansaray.52@seed.retailintel.local,+23278191131,"57 Mansaray Street, Freetown",500.00,0.00,True,2026-02-03 12:58:18.781647+00:00,66.33,2,2026-04-24 12:58:18.781647+00:00,100
+241,Aminata Bah,aminata.bah.53@seed.retailintel.local,+23275639317,"172 Bah Street, Freetown",1000.00,224.83,True,2026-04-14 12:58:18.781647+00:00,2242.16,8,2026-08-25 12:58:18.781647+00:00,93
+242,Aisha Kanneh,aisha.kanneh.54@seed.retailintel.local,+23272141239,"160 Kanneh Street, Freetown",2000.00,61.85,True,2026-02-26 12:58:18.781647+00:00,200.99,2,2026-04-04 12:58:18.781647+00:00,99
+243,Hawa Sillah,hawa.sillah.55@seed.retailintel.local,+23279468926,"170 Sillah Street, Freetown",0.00,0.00,True,2026-08-10 12:58:18.781647+00:00,86.50,1,2026-08-23 12:58:18.781647+00:00,85
+244,Sahr Conteh,sahr.conteh.56@seed.retailintel.local,+23277746014,"47 Conteh Street, Freetown",0.00,0.00,True,2026-08-14 12:58:18.781647+00:00,86.24,1,2026-08-23 12:58:18.781647+00:00,85
+245,Kadiatu Kargbo,kadiatu.kargbo.57@seed.retailintel.local,+23277628588,"84 Kargbo Street, Freetown",500.00,193.44,True,2026-05-09 12:58:18.781647+00:00,392.94,3,2026-08-21 12:58:18.781647+00:00,88
+246,Hawa Jalloh,hawa.jalloh.58@seed.retailintel.local,+23277072684,"65 Jalloh Street, Freetown",0.00,0.00,True,2026-01-06 12:58:18.781647+00:00,499.51,5,2026-05-08 12:58:18.781647+00:00,85
+247,Sheku Gbla,sheku.gbla.59@seed.retailintel.local,+23270873851,"90 Gbla Street, Freetown",0.00,0.00,True,2026-02-24 12:58:18.781647+00:00,1574.86,9,2026-08-22 12:58:18.781647+00:00,85
+248,Ramatu Sesay,ramatu.sesay.60@seed.retailintel.local,+23270520596,"64 Sesay Street, Freetown",0.00,0.00,True,2026-04-05 12:58:18.781647+00:00,943.81,6,2026-07-06 12:58:18.781647+00:00,85
+249,Momoh Conteh,momoh.conteh.61@seed.retailintel.local,+23274002120,"33 Conteh Street, Freetown",1000.00,592.87,True,2026-03-30 12:58:18.781647+00:00,919.30,9,2026-08-11 12:58:18.781647+00:00,82
+250,Yeanoh Kargbo,yeanoh.kargbo.62@seed.retailintel.local,+23277801975,"180 Kargbo Street, Freetown",500.00,0.00,True,2026-02-25 12:58:18.781647+00:00,985.92,7,2026-07-14 12:58:18.781647+00:00,100
+251,Abu Barrie,abu.barrie.63@seed.retailintel.local,+23271921542,"200 Barrie Street, Freetown",0.00,0.00,True,2026-03-15 12:58:18.781647+00:00,1269.75,3,2026-05-14 12:58:18.781647+00:00,85
+252,Ibrahim Sillah,ibrahim.sillah.64@seed.retailintel.local,+23270430812,"80 Sillah Street, Freetown",2000.00,202.33,True,2026-05-01 12:58:18.781647+00:00,745.12,2,2026-08-22 12:58:18.781647+00:00,97
+253,Hawa Bah,hawa.bah.65@seed.retailintel.local,+23273327421,"20 Bah Street, Freetown",2000.00,230.20,True,2026-02-08 12:58:18.781647+00:00,1178.76,8,2026-07-01 12:58:18.781647+00:00,97
+254,Kadija Mansaray,kadija.mansaray.66@seed.retailintel.local,+23271709620,"179 Mansaray Street, Freetown",500.00,27.83,True,2026-04-11 12:58:18.781647+00:00,470.31,5,2026-07-01 12:58:18.781647+00:00,98
+255,Momoh Bangura,momoh.bangura.67@seed.retailintel.local,+23279494772,"11 Bangura Street, Freetown",500.00,228.60,True,2026-01-07 12:58:18.781647+00:00,1349.08,17,2026-08-24 12:58:18.781647+00:00,86
+256,Brima Sankoh,brima.sankoh.68@seed.retailintel.local,+23271156902,"130 Sankoh Street, Freetown",500.00,414.97,True,2026-02-01 12:58:18.781647+00:00,2118.84,12,2026-08-23 12:58:18.781647+00:00,67
+257,Sahr Vandy,sahr.vandy.69@seed.retailintel.local,+23271770648,"111 Vandy Street, Freetown",500.00,0.00,True,2026-08-22 12:58:18.781647+00:00,61.32,1,2026-08-26 12:58:18.781647+00:00,100
+258,Aisha Kanneh,aisha.kanneh.70@seed.retailintel.local,+23272566765,"112 Kanneh Street, Freetown",0.00,0.00,True,2026-04-17 12:58:18.781647+00:00,706.65,5,2026-07-11 12:58:18.781647+00:00,85
+259,Kadija Jalloh,kadija.jalloh.71@seed.retailintel.local,+23279029043,"199 Jalloh Street, Freetown",1000.00,0.00,True,2026-01-20 12:58:18.781647+00:00,265.81,4,2026-04-25 12:58:18.781647+00:00,100
+260,Aisha Sillah,aisha.sillah.72@seed.retailintel.local,+23274502929,"83 Sillah Street, Freetown",0.00,0.00,True,2026-03-23 12:58:18.781647+00:00,1008.18,10,2026-08-25 12:58:18.781647+00:00,85
+261,Fatmata Jalloh,fatmata.jalloh.73@seed.retailintel.local,+23277563202,"63 Jalloh Street, Freetown",1000.00,367.16,True,2026-02-23 12:58:18.781647+00:00,1095.38,14,2026-08-21 12:58:18.781647+00:00,89
+262,Brima Bah,brima.bah.74@seed.retailintel.local,+23275643798,"8 Bah Street, Freetown",1000.00,0.00,True,2026-02-22 12:58:18.781647+00:00,4441.06,14,2026-08-23 12:58:18.781647+00:00,100
+263,Abu Vandy,abu.vandy.75@seed.retailintel.local,+23273558780,"91 Vandy Street, Freetown",500.00,292.26,True,2026-01-21 12:58:18.781647+00:00,1394.11,17,2026-08-23 12:58:18.781647+00:00,82
+264,Marie Barrie,marie.barrie.76@seed.retailintel.local,+23274635017,"143 Barrie Street, Freetown",0.00,0.00,True,2025-12-11 12:58:18.781647+00:00,2143.97,13,2026-08-23 12:58:18.781647+00:00,85
+265,Mariama Koroma,mariama.koroma.77@seed.retailintel.local,+23274049282,"185 Koroma Street, Freetown",1000.00,155.11,True,2026-02-04 12:58:18.781647+00:00,1384.33,11,2026-08-26 12:58:18.781647+00:00,95
+266,Ramatu Mansaray,ramatu.mansaray.78@seed.retailintel.local,+23277987516,"166 Mansaray Street, Freetown",1000.00,66.03,True,2026-04-01 12:58:18.781647+00:00,1211.14,7,2026-08-26 12:58:18.781647+00:00,98
+267,Aminata Koroma,aminata.koroma.79@seed.retailintel.local,+23274936453,"57 Koroma Street, Freetown",1000.00,231.12,True,2025-11-27 12:58:18.781647+00:00,2768.25,15,2026-08-22 12:58:18.781647+00:00,93
+268,Foday Sillah,foday.sillah.80@seed.retailintel.local,+23276191135,"122 Sillah Street, Freetown",2000.00,145.50,True,2026-02-12 12:58:18.781647+00:00,639.49,7,2026-06-20 12:58:18.781647+00:00,98
+269,Sahr Gbla,sahr.gbla.81@seed.retailintel.local,+23275549757,"91 Gbla Street, Freetown",1000.00,910.33,True,2026-03-05 12:58:18.781647+00:00,5851.36,13,2026-08-25 12:58:18.781647+00:00,73
+270,Adama Mansaray,adama.mansaray.82@seed.retailintel.local,+23272024269,"185 Mansaray Street, Freetown",0.00,0.00,True,2026-03-27 12:58:18.781647+00:00,154.24,4,2026-08-22 12:58:18.781647+00:00,85
+271,Sheku Gbla,sheku.gbla.83@seed.retailintel.local,+23273106298,"50 Gbla Street, Freetown",0.00,0.00,True,2026-07-16 12:58:18.781647+00:00,230.52,2,2026-08-22 12:58:18.781647+00:00,85
+272,Adama Sillah,adama.sillah.84@seed.retailintel.local,+23278801946,"153 Sillah Street, Freetown",500.00,0.00,True,2026-01-07 12:58:18.781647+00:00,275.16,3,2026-04-01 12:58:18.781647+00:00,100
+273,Aisha Kargbo,aisha.kargbo.85@seed.retailintel.local,+23274970190,"59 Kargbo Street, Freetown",500.00,98.28,True,2025-09-14 12:58:18.781647+00:00,1304.38,4,2026-08-22 12:58:18.781647+00:00,94
+274,Aminata Gbla,aminata.gbla.86@seed.retailintel.local,+23272123709,"71 Gbla Street, Freetown",0.00,0.00,True,2026-02-21 12:58:18.781647+00:00,408.96,3,2026-06-27 12:58:18.781647+00:00,85
+275,Santigie Kanu,santigie.kanu.87@seed.retailintel.local,+23272118618,"164 Kanu Street, Freetown",1000.00,0.00,True,2026-02-17 12:58:18.781647+00:00,720.97,3,2026-08-23 12:58:18.781647+00:00,100
+276,Aminata Sillah,aminata.sillah.88@seed.retailintel.local,+23274770422,"121 Sillah Street, Freetown",1000.00,0.00,True,2026-08-11 12:58:18.781647+00:00,360.63,1,2026-08-24 12:58:18.781647+00:00,100
+277,Abu Sesay,abu.sesay.89@seed.retailintel.local,+23274235884,"123 Sesay Street, Freetown",0.00,0.00,True,2026-04-23 12:58:18.781647+00:00,743.75,9,2026-08-25 12:58:18.781647+00:00,85
+278,Hawa Vandy,hawa.vandy.90@seed.retailintel.local,+23271242892,"148 Vandy Street, Freetown",0.00,0.00,True,2026-04-12 12:58:18.781647+00:00,370.19,10,2026-08-21 12:58:18.781647+00:00,85
+279,Lamin Sillah,lamin.sillah.91@seed.retailintel.local,+23275097514,"22 Sillah Street, Freetown",0.00,0.00,True,2026-05-02 12:58:18.781647+00:00,259.70,3,2026-08-26 12:58:18.781647+00:00,85
+280,Ramatu Kabba,ramatu.kabba.92@seed.retailintel.local,+23273786401,"199 Kabba Street, Freetown",2000.00,0.00,True,2026-08-16 12:58:18.781647+00:00,107.56,1,2026-08-23 12:58:18.781647+00:00,100
+281,Osman Kanneh,osman.kanneh.93@seed.retailintel.local,+23274988757,"151 Kanneh Street, Freetown",1000.00,560.97,True,2026-01-30 12:58:18.781647+00:00,1420.55,12,2026-08-24 12:58:18.781647+00:00,83
+282,Momoh Sesay,momoh.sesay.94@seed.retailintel.local,+23271664863,"196 Sesay Street, Freetown",0.00,0.00,True,2026-07-13 12:58:18.781647+00:00,82.61,2,2026-08-25 12:58:18.781647+00:00,85
+283,Adama Koroma,adama.koroma.95@seed.retailintel.local,+23272634980,"62 Koroma Street, Freetown",0.00,0.00,True,2026-04-29 12:58:18.781647+00:00,452.20,4,2026-06-28 12:58:18.781647+00:00,85
+284,Abu Kamara,abu.kamara.96@seed.retailintel.local,+23276853787,"116 Kamara Street, Freetown",2000.00,1902.13,True,2025-11-12 12:58:18.781647+00:00,4310.57,20,2026-08-25 12:58:18.781647+00:00,71
+285,Mohamed Mansaray,mohamed.mansaray.97@seed.retailintel.local,+23274833597,"181 Mansaray Street, Freetown",500.00,0.00,True,2026-03-12 12:58:18.781647+00:00,1400.79,10,2026-08-23 12:58:18.781647+00:00,100
+286,Zainab Koroma,zainab.koroma.98@seed.retailintel.local,+23273916201,"68 Koroma Street, Freetown",2000.00,231.10,True,2026-03-30 12:58:18.781647+00:00,711.79,6,2026-07-10 12:58:18.781647+00:00,97
+287,Osman Kargbo,osman.kargbo.99@seed.retailintel.local,+23277132648,"30 Kargbo Street, Freetown",2000.00,228.90,True,2026-02-17 12:58:18.781647+00:00,541.31,6,2026-06-17 12:58:18.781647+00:00,97
+288,Isatu Jalloh,isatu.jalloh.100@seed.retailintel.local,+23272386328,"19 Jalloh Street, Freetown",0.00,0.00,True,2026-05-10 12:58:18.781647+00:00,552.03,3,2026-08-22 12:58:18.781647+00:00,85
+289,Foday Barrie,foday.barrie.101@seed.retailintel.local,+23279549709,"74 Barrie Street, Freetown",1000.00,0.00,True,2026-07-06 12:58:18.781647+00:00,176.28,2,2026-08-21 12:58:18.781647+00:00,100
+290,Fanta Kanu,fanta.kanu.102@seed.retailintel.local,+23276752972,"70 Kanu Street, Freetown",2000.00,0.00,True,2026-08-20 12:58:18.781647+00:00,67.71,1,2026-08-23 12:58:18.781647+00:00,100
+291,Zainab Koroma,zainab.koroma.103@seed.retailintel.local,+23270668752,"111 Koroma Street, Freetown",500.00,236.35,True,2026-03-04 12:58:18.781647+00:00,4656.69,14,2026-08-22 12:58:18.781647+00:00,86
+292,Aminata Koroma,aminata.koroma.104@seed.retailintel.local,+23273840714,"173 Koroma Street, Freetown",2000.00,49.89,True,2026-02-10 12:58:18.781647+00:00,708.61,8,2026-07-08 12:58:18.781647+00:00,99
+293,Aminata Jalloh,aminata.jalloh.105@seed.retailintel.local,+23279667820,"11 Jalloh Street, Freetown",0.00,0.00,True,2026-03-02 12:58:18.781647+00:00,1626.07,8,2026-07-08 12:58:18.781647+00:00,85
+294,Kadija Kanneh,kadija.kanneh.106@seed.retailintel.local,+23274666692,"47 Kanneh Street, Freetown",2000.00,347.81,True,2025-12-09 12:58:18.781647+00:00,1358.47,15,2026-08-26 12:58:18.781647+00:00,95
+295,Aisha Vandy,aisha.vandy.107@seed.retailintel.local,+23271530793,"121 Vandy Street, Freetown",500.00,197.36,True,2025-12-27 12:58:18.781647+00:00,2632.68,12,2026-08-23 12:58:18.781647+00:00,88
+296,Kadiatu Bangura,kadiatu.bangura.108@seed.retailintel.local,+23272698193,"85 Bangura Street, Freetown",1000.00,491.38,True,2026-02-23 12:58:18.781647+00:00,1035.58,9,2026-08-22 12:58:18.781647+00:00,81
+297,Foday Bah,foday.bah.109@seed.retailintel.local,+23279229089,"10 Bah Street, Freetown",1000.00,0.00,True,2026-04-02 12:58:18.781647+00:00,450.02,6,2026-07-10 12:58:18.781647+00:00,100
+298,Adama Fofanah,adama.fofanah.110@seed.retailintel.local,+23271944841,"198 Fofanah Street, Freetown",1000.00,58.31,True,2026-08-10 12:58:18.781647+00:00,58.31,1,2026-08-24 12:58:18.781647+00:00,98
+299,Aisha Kamara,aisha.kamara.111@seed.retailintel.local,+23279103209,"119 Kamara Street, Freetown",1000.00,171.57,True,2026-01-14 12:58:18.781647+00:00,1049.28,15,2026-08-22 12:58:18.781647+00:00,95
+300,Mabinty Sankoh,mabinty.sankoh.112@seed.retailintel.local,+23278363326,"161 Sankoh Street, Freetown",1000.00,0.00,True,2026-08-18 12:58:18.781647+00:00,34.61,1,2026-08-23 12:58:18.781647+00:00,100
+301,Mariama Jalloh,mariama.jalloh.113@seed.retailintel.local,+23279214376,"34 Jalloh Street, Freetown",500.00,0.00,True,2026-02-01 12:58:18.781647+00:00,150.82,3,2026-04-14 12:58:18.781647+00:00,100
+302,Fanta Vandy,fanta.vandy.114@seed.retailintel.local,+23272037191,"8 Vandy Street, Freetown",2000.00,207.18,True,2026-04-11 12:58:18.781647+00:00,623.87,8,2026-08-23 12:58:18.781647+00:00,97
+303,Fanta Turay,fanta.turay.115@seed.retailintel.local,+23275213522,"142 Turay Street, Freetown",0.00,0.00,True,2026-02-14 12:58:18.781647+00:00,193.89,4,2026-06-08 12:58:18.781647+00:00,85
+304,Fatmata Mansaray,fatmata.mansaray.116@seed.retailintel.local,+23271903561,"119 Mansaray Street, Freetown",0.00,0.00,True,2026-02-06 12:58:18.781647+00:00,4780.85,17,2026-08-25 12:58:18.781647+00:00,85
+305,Isatu Vandy,isatu.vandy.117@seed.retailintel.local,+23274896624,"131 Vandy Street, Freetown",500.00,24.38,True,2026-04-15 12:58:18.781647+00:00,747.12,5,2026-06-25 12:58:18.781647+00:00,99
+306,Alusine Vandy,alusine.vandy.118@seed.retailintel.local,+23274089126,"117 Vandy Street, Freetown",2000.00,107.92,True,2026-01-18 12:58:18.781647+00:00,949.95,11,2026-08-26 12:58:18.781647+00:00,98
+307,Mariama Barrie,mariama.barrie.119@seed.retailintel.local,+23278526867,"192 Barrie Street, Freetown",0.00,0.00,True,2026-03-11 12:58:18.781647+00:00,550.19,4,2026-08-21 12:58:18.781647+00:00,85
+308,Adama Kabba,adama.kabba.120@seed.retailintel.local,+23275702160,"130 Kabba Street, Freetown",500.00,174.51,True,2026-04-05 12:58:18.781647+00:00,1103.00,11,2026-08-04 12:58:18.781647+00:00,90
+309,Foday Kanu,foday.kanu.121@seed.retailintel.local,+23279847180,"149 Kanu Street, Freetown",1000.00,134.51,True,2026-03-23 12:58:18.781647+00:00,614.43,10,2026-08-24 12:58:18.781647+00:00,96
+310,Zainab Gbla,zainab.gbla.122@seed.retailintel.local,+23278125900,"89 Gbla Street, Freetown",500.00,241.09,True,2026-01-31 12:58:18.781647+00:00,992.70,16,2026-08-22 12:58:18.781647+00:00,86
+311,Santigie Bah,santigie.bah.123@seed.retailintel.local,+23277639414,"83 Bah Street, Freetown",0.00,0.00,True,2025-12-16 12:58:18.781647+00:00,5905.15,19,2026-08-24 12:58:18.781647+00:00,85
+312,Alhaji Sillah,alhaji.sillah.124@seed.retailintel.local,+23276425184,"60 Sillah Street, Freetown",1000.00,0.00,True,2026-06-09 12:58:18.781647+00:00,626.68,2,2026-08-21 12:58:18.781647+00:00,100
+313,Sheku Vandy,sheku.vandy.125@seed.retailintel.local,+23276395997,"99 Vandy Street, Freetown",0.00,0.00,True,2026-08-17 12:58:18.781647+00:00,210.79,1,2026-08-22 12:58:18.781647+00:00,85
+314,Mohamed Conteh,mohamed.conteh.126@seed.retailintel.local,+23278427047,"152 Conteh Street, Freetown",500.00,305.72,True,2025-12-23 12:58:18.781647+00:00,1089.89,13,2026-08-26 12:58:18.781647+00:00,82
+315,Musa Kanneh,musa.kanneh.127@seed.retailintel.local,+23271672884,"135 Kanneh Street, Freetown",1000.00,473.19,True,2026-02-03 12:58:18.781647+00:00,913.33,14,2026-08-05 12:58:18.781647+00:00,86
+316,Isatu Kabba,isatu.kabba.128@seed.retailintel.local,+23272589751,"20 Kabba Street, Freetown",1000.00,0.00,True,2026-08-15 12:58:18.781647+00:00,125.79,1,2026-08-21 12:58:18.781647+00:00,100
+317,Adama Fofanah,adama.fofanah.129@seed.retailintel.local,+23276668663,"167 Fofanah Street, Freetown",0.00,0.00,True,2026-02-06 12:58:18.781647+00:00,242.98,4,2026-04-22 12:58:18.781647+00:00,85
+318,Musa Gbla,musa.gbla.130@seed.retailintel.local,+23276375499,"82 Gbla Street, Freetown",1000.00,0.00,True,2025-12-10 12:58:18.781647+00:00,1731.66,17,2026-08-08 12:58:18.781647+00:00,100
+319,Mohamed Barrie,mohamed.barrie.131@seed.retailintel.local,+23271147909,"61 Barrie Street, Freetown",500.00,134.05,True,2025-12-23 12:58:18.781647+00:00,771.40,17,2026-08-23 12:58:18.781647+00:00,92
+320,Sheku Koroma,sheku.koroma.132@seed.retailintel.local,+23277280833,"26 Koroma Street, Freetown",0.00,0.00,True,2025-10-31 12:58:18.781647+00:00,3143.71,4,2026-08-24 12:58:18.781647+00:00,85
+321,Fanta Kanu,fanta.kanu.133@seed.retailintel.local,+23270485654,"12 Kanu Street, Freetown",500.00,497.17,True,2026-01-27 12:58:18.781647+00:00,1160.36,12,2026-08-25 12:58:18.781647+00:00,70
+322,Foday Sankoh,foday.sankoh.134@seed.retailintel.local,+23276288789,"111 Sankoh Street, Freetown",0.00,0.00,True,2026-01-25 12:58:18.781647+00:00,615.78,4,2026-04-22 12:58:18.781647+00:00,85
+323,Sahr Sillah,sahr.sillah.135@seed.retailintel.local,+23273020853,"44 Sillah Street, Freetown",0.00,0.00,True,2026-04-06 12:58:18.781647+00:00,413.17,4,2026-08-25 12:58:18.781647+00:00,85
+324,Musa Bah,musa.bah.136@seed.retailintel.local,+23274040453,"128 Bah Street, Freetown",2000.00,0.00,True,2026-08-15 12:58:18.781647+00:00,140.61,1,2026-08-23 12:58:18.781647+00:00,100
+325,Zainab Jalloh,zainab.jalloh.137@seed.retailintel.local,+23277710313,"66 Jalloh Street, Freetown",0.00,0.00,True,2026-05-06 12:58:18.781647+00:00,294.37,3,2026-08-22 12:58:18.781647+00:00,85
+326,Zainab Kanu,zainab.kanu.138@seed.retailintel.local,+23279170395,"41 Kanu Street, Freetown",0.00,0.00,True,2026-01-18 12:58:18.781647+00:00,1880.91,15,2026-08-25 12:58:18.781647+00:00,85
+327,Sorie Sillah,sorie.sillah.139@seed.retailintel.local,+23275018975,"164 Sillah Street, Freetown",1000.00,215.34,True,2026-03-20 12:58:18.781647+00:00,1270.70,9,2026-08-24 12:58:18.781647+00:00,94
+328,Zainab Kanu,zainab.kanu.140@seed.retailintel.local,+23273342306,"99 Kanu Street, Freetown",1000.00,74.69,True,2026-02-07 12:58:18.781647+00:00,625.82,8,2026-06-25 12:58:18.781647+00:00,98
+329,Hawa Sillah,hawa.sillah.141@seed.retailintel.local,+23276022335,"148 Sillah Street, Freetown",500.00,0.00,True,2026-08-11 12:58:18.781647+00:00,122.50,1,2026-08-25 12:58:18.781647+00:00,100
+330,Foday Kamara,foday.kamara.142@seed.retailintel.local,+23276640518,"71 Kamara Street, Freetown",0.00,0.00,True,2026-03-01 12:58:18.781647+00:00,1452.64,3,2026-08-26 12:58:18.781647+00:00,85
+331,Brima Sesay,brima.sesay.143@seed.retailintel.local,+23278333700,"74 Sesay Street, Freetown",0.00,0.00,True,2026-04-08 12:58:18.781647+00:00,2911.67,11,2026-08-25 12:58:18.781647+00:00,85
+332,Sorie Mansaray,sorie.mansaray.144@seed.retailintel.local,+23273189885,"159 Mansaray Street, Freetown",500.00,96.80,True,2026-03-07 12:58:18.781647+00:00,874.77,7,2026-07-07 12:58:18.781647+00:00,94
+333,Sheku Conteh,sheku.conteh.145@seed.retailintel.local,+23271630140,"161 Conteh Street, Freetown",0.00,0.00,True,2026-02-11 12:58:18.781647+00:00,529.97,7,2026-06-20 12:58:18.781647+00:00,85
+334,Zainab Sesay,zainab.sesay.146@seed.retailintel.local,+23279723634,"94 Sesay Street, Freetown",0.00,0.00,True,2026-07-15 12:58:18.781647+00:00,323.30,2,2026-08-26 12:58:18.781647+00:00,85
+335,Foday Fofanah,foday.fofanah.147@seed.retailintel.local,+23276970985,"45 Fofanah Street, Freetown",0.00,0.00,True,2026-08-22 12:58:18.781647+00:00,49.08,1,2026-08-24 12:58:18.781647+00:00,85
+336,Santigie Sankoh,santigie.sankoh.148@seed.retailintel.local,+23278906224,"129 Sankoh Street, Freetown",500.00,0.00,True,2026-08-19 12:58:18.781647+00:00,225.47,1,2026-08-24 12:58:18.781647+00:00,100
+337,Adama Vandy,adama.vandy.149@seed.retailintel.local,+23274951651,"192 Vandy Street, Freetown",500.00,251.18,True,2026-01-19 12:58:18.781647+00:00,1064.70,16,2026-08-21 12:58:18.781647+00:00,85
