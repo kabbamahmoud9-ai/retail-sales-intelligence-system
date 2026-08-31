@@ -1,16 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Expense, ExpenseCategory
 from .forms import ExpenseForm, ExpenseCategoryForm
+from accounts.decorators import owner_required
 
-@login_required
+@owner_required
 def expense_list(request):
     expenses = Expense.objects.select_related('category', 'recorded_by').order_by('-expense_date')
     total = sum(e.amount for e in expenses)
     return render(request, 'expenses/expense_list.html', {'expenses': expenses, 'total': total})
 
-@login_required
+@owner_required
 def expense_add(request):
     if request.method == 'POST':
         form = ExpenseForm(request.POST)
@@ -24,7 +24,7 @@ def expense_add(request):
         form = ExpenseForm()
     return render(request, 'expenses/expense_form.html', {'form': form, 'title': 'Add Expense'})
 
-@login_required
+@owner_required
 def expense_delete(request, pk):
     expense = get_object_or_404(Expense, pk=pk)
     if request.method == 'POST':
@@ -33,12 +33,12 @@ def expense_delete(request, pk):
         return redirect('expense_list')
     return render(request, 'expenses/expense_confirm_delete.html', {'expense': expense})
 
-@login_required
+@owner_required
 def expense_category_list(request):
     categories = ExpenseCategory.objects.all()
     return render(request, 'expenses/expense_category_list.html', {'categories': categories})
 
-@login_required
+@owner_required
 def expense_category_add(request):
     if request.method == 'POST':
         form = ExpenseCategoryForm(request.POST)

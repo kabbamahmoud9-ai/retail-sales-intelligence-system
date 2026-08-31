@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import RegisterForm
+from .decorators import owner_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from django.shortcuts import render, redirect 
+from django.shortcuts import render, redirect
 
 
 def login_view(request):
@@ -24,13 +25,20 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+@owner_required
 def register_view(request):
+    """
+    Creates a new staff/owner account. Restricted to shop-owner accounts
+    only — this used to be a public signup form, which meant anyone could
+    create an account with role='admin'. Now it's the owner's "add staff"
+    function instead.
+    """
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, 'Account created successfully!')
-            return redirect('login')
+            return redirect('dashboard')
     else:
         form = RegisterForm()
     return render(request, 'accounts/register.html', {'form': form})

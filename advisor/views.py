@@ -1,18 +1,18 @@
 import json
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.http import JsonResponse
 
+from accounts.decorators import owner_required
 from .models import Recommendation, AdvisorConversationSession
 from .business_health import generate_business_health_summary
 from .briefing import generate_daily_briefing
 from .conversational import process_message
 
 
-@login_required
+@owner_required
 def advisor_list(request):
     priority_filter = request.GET.get('priority', 'all')
 
@@ -31,9 +31,6 @@ def advisor_list(request):
         'low': Recommendation.objects.filter(priority='low').count(),
     }
 
-    # New for Step 19: business health summary, daily briefing, and a
-    # fresh conversation session for the chat panel — created once per
-    # page load, same pattern as ai_commerce.conversational_chat.
     business_health = generate_business_health_summary()
     daily_briefing = generate_daily_briefing()
     chat_session = AdvisorConversationSession.objects.create(staff_user=request.user)
@@ -48,7 +45,7 @@ def advisor_list(request):
     })
 
 
-@login_required
+@owner_required
 @require_POST
 def mark_actioned(request, pk):
     rec = get_object_or_404(Recommendation, pk=pk)
@@ -58,7 +55,7 @@ def mark_actioned(request, pk):
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
-@login_required
+@owner_required
 @require_POST
 def advisor_message(request, session_id):
     """

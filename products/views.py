@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Product, Category, Supplier
 from .forms import ProductForm, CategoryForm, SupplierForm
+from accounts.decorators import owner_required
 
 @login_required
 def product_list(request):
@@ -60,12 +61,12 @@ def category_add(request):
         form = CategoryForm()
     return render(request, 'products/category_form.html', {'form': form, 'title': 'Add Category'})
 
-@login_required
+@owner_required
 def supplier_list(request):
     suppliers = Supplier.objects.all()
     return render(request, 'products/supplier_list.html', {'suppliers': suppliers})
 
-@login_required
+@owner_required
 def supplier_add(request):
     if request.method == 'POST':
         form = SupplierForm(request.POST)

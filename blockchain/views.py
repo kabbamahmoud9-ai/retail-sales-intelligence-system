@@ -7,20 +7,14 @@ No business logic beyond formatting lives here.
 """
 
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
+from accounts.decorators import owner_required
 from .services import verify_chain
 
 
-@login_required
+@owner_required
 def verify_ledger(request):
-    """
-    Runs chain verification every time this page loads. This single
-    behavior covers both requirements: automatic verification on load,
-    and the "Run Verification Again" button — which is just a link back
-    to this same view, so clicking it re-runs the check naturally.
-    """
     result = verify_chain()
 
     context = {
