@@ -1,10 +1,11 @@
 from django.test import TestCase
+from .services import calculate_sales_notification
 class SalesNotificationTests(TestCase):
     def test_equal_sales_no_notification(self):
         self.assertIsNone(calculate_sales_notification(today_sales=100, yesterday_sales=100))
 
     def test_fifty_percent_increase(self):
-        result = calculate_sales_notification(today_sales=150, yesterday_sales=100)
+        result = calculate_sales_notification(today_sales=1500, yesterday_sales=1000)
         self.assertIn("Up 50%", result['title'])
 
     def test_double_sales_hundred_percent_increase(self):

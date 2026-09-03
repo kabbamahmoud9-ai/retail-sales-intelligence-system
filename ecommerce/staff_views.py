@@ -15,6 +15,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from accounts.decorators import owner_required
 from django.contrib import messages
 from django.utils import timezone
 
@@ -74,7 +75,7 @@ def customer_intelligence_detail(request, pk):
     })
 
 
-@login_required
+@owner_required
 def approve_credit_recommendation(request, pk):
     """
     Staff-triggered approval: copies the latest CreditAssessment's
@@ -107,6 +108,41 @@ def approve_credit_recommendation(request, pk):
     )
     return redirect('customer_intelligence_detail', pk=pk)
 
+@owner_required
+def edit_credit_limit(request, pk):
+    """
+    Staff-triggered manual override of a customer's actual credit limit.
+    OWNER/ADMIN ONLY — enforced here via @owner_required, not just by
+    hiding the form in the template. Distinct from
+    approve_credit_recommendation: that copies the AI's recommendation
+    verbatim; this lets an owner set any value, which may or may not
+    match the AI recommendation. CreditAssessment / the AI recommendation
+    itself is never touched by this — the two stay fully independent,
+    same as approve_credit_recommendation's existing docstring describes.
+    """
+    if request.method != 'POST':
+        return redirect('customer_intelligence_detail', pk=pk)
+
+    customer = get_object_or_404(OnlineCustomer, pk=pk)
+
+    try:
+        new_limit = Decimal(request.POST.get('credit_limit', '').strip())
+    except (InvalidOperation, AttributeError):
+        messages.error(request, "Please enter a valid credit limit.")
+        return redirect('customer_intelligence_detail', pk=pk)
+
+    if new_limit < 0:
+        messages.error(request, "Credit limit cannot be negative.")
+        return redirect('customer_intelligence_detail', pk=pk)
+
+    customer.credit_limit = new_limit
+    customer.save(update_fields=['credit_limit'])
+
+    messages.success(
+        request,
+        f"Credit limit for {customer.full_name} manually set to Le {customer.credit_limit:,.2f}."
+    )
+    return redirect('customer_intelligence_detail', pk=pk)
 
 @login_required
 def record_credit_repayment(request, pk):

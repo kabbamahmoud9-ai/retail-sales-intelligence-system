@@ -6,6 +6,7 @@ integrity and blockchain audit trail correctness. Uses Django's test
 framework — runs against a fresh, isolated test database, never touches
 real dev/demo data.
 """
+from django.urls import reverse
 from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
@@ -159,3 +160,77 @@ class BlockchainIntegrityTests(TestCase):
         result = verify_chain()
         self.assertFalse(result['is_valid'])
         self.assertTrue(len(result['broken_entries']) > 0)
+
+# ↓↓↓ ADD THIS NEW CLASS AT THE END OF THE FILE ↓↓↓
+
+class CreditLimitEditTests(TestCase):
+    """
+    Covers the new owner-only manual credit-limit override
+    (edit_credit_limit) added alongside the existing AI-recommendation
+    approval flow (approve_credit_recommendation, covered above in
+    CreditWorkflowTests). Confirms the actual limit an owner sets drives
+    available_credit, and that staff cannot reach either write path.
+    """
+    def setUp(self):
+        self.customer = OnlineCustomer(full_name='Test Customer', email='credittest@example.com')
+        self.customer.set_password('testpass123')
+        self.customer.credit_limit = Decimal('10000.00')
+        self.customer.credit_balance = Decimal('500.00')
+        self.customer.save()
+
+        # NOTE: role field/values below are a placeholder pending
+        # confirmation against accounts/models.py — see chat.
+        from accounts.models import CustomUser
+        self.owner = CustomUser.objects.create_user(username='owner1', password='pass', role='admin')
+        self.staff = CustomUser.objects.create_user(username='staff1', password='pass', role='staff')
+
+    def test_owner_can_edit_credit_limit(self):
+        self.client.force_login(self.owner)
+        self.client.post(
+            reverse('edit_credit_limit', args=[self.customer.pk]),
+            {'credit_limit': '15000.00'}
+        )
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.credit_limit, Decimal('15000.00'))
+
+    def test_staff_cannot_edit_credit_limit(self):
+        self.client.force_login(self.staff)
+        response = self.client.post(
+            reverse('edit_credit_limit', args=[self.customer.pk]),
+            {'credit_limit': '99999.00'}
+        )
+        self.assertEqual(response.status_code, 403)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.credit_limit, Decimal('10000.00'))
+
+    def test_negative_credit_limit_rejected(self):
+        self.client.force_login(self.owner)
+        self.client.post(
+            reverse('edit_credit_limit', args=[self.customer.pk]),
+            {'credit_limit': '-500.00'}
+        )
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.credit_limit, Decimal('10000.00'))
+
+    def test_invalid_input_rejected(self):
+        self.client.force_login(self.owner)
+        self.client.post(
+            reverse('edit_credit_limit', args=[self.customer.pk]),
+            {'credit_limit': 'not-a-number'}
+        )
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.credit_limit, Decimal('10000.00'))
+
+    def test_available_credit_updates_after_edit(self):
+        self.client.force_login(self.owner)
+        self.client.post(
+            reverse('edit_credit_limit', args=[self.customer.pk]),
+            {'credit_limit': '20000.00'}
+        )
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.available_credit, Decimal('19500.00'))
+
+    def test_staff_cannot_approve_credit_recommendation(self):
+        self.client.force_login(self.staff)
+        response = self.client.post(reverse('approve_credit_recommendation', args=[self.customer.pk]))
+        self.assertEqual(response.status_code, 403)
