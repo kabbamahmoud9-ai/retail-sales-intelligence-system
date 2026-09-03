@@ -124,3 +124,17 @@ class CustomerInsightSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.customer.full_name} — {self.get_segment_display()} @ {self.generated_at:%Y-%m-%d}"
+
+    @property
+    def churn_risk_percent(self):
+        """
+        Single authoritative conversion of the stored 0.0-1.0 probability
+        to a whole-number percentage for display. All templates and the
+        narrative generator must go through this instead of formatting
+        churn_risk_score directly, so there is exactly one place that
+        performs the *100 conversion (see Issue: churn risk inconsistency
+        between narrative text and displayed metric/history).
+        """
+        if self.churn_risk_score is None:
+            return None
+        return round(self.churn_risk_score * 100)

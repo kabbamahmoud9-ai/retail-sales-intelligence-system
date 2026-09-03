@@ -652,3 +652,60 @@ class ShoppingPromptBudgetFactTests(TestCase):
 
         self.assertIn("Here are a few options", reply_text)
         self.assertEqual(routed_to, "shopping_assistant")
+
+class ShopByGoalQualityMappingTests(TestCase):
+    """
+    Regression test for the save_money/premium_quality no-op bug:
+    these two goals carry no keyword signal in _GOAL_KEYWORD_MAP by
+    design, so before this fix they contributed nothing to scoring.
+    """
+
+    def test_save_money_goal_maps_to_budget_quality(self):
+        from ai_commerce.services import _effective_quality_preference
+        from ai_commerce.models import ShoppingSession
+        from ecommerce.models import OnlineCustomer
+
+        customer = OnlineCustomer.objects.create(
+            full_name="Goal Test Customer", email="goal_test@example.com", phone="0000000007",
+        )
+        customer.set_password("testpass123")
+        customer.save()
+
+        session = ShoppingSession.objects.create(
+            customer=customer, mode='shop_by_goal', goal='save_money',
+        )
+        self.assertEqual(_effective_quality_preference(session), 'budget')
+
+    def test_premium_quality_goal_maps_to_premium_quality(self):
+        from ai_commerce.services import _effective_quality_preference
+        from ai_commerce.models import ShoppingSession
+        from ecommerce.models import OnlineCustomer
+
+        customer = OnlineCustomer.objects.create(
+            full_name="Goal Test Customer 2", email="goal_test2@example.com", phone="0000000008",
+        )
+        customer.set_password("testpass123")
+        customer.save()
+
+        session = ShoppingSession.objects.create(
+            customer=customer, mode='shop_by_goal', goal='premium_quality',
+        )
+        self.assertEqual(_effective_quality_preference(session), 'premium')
+
+    def test_healthy_living_goal_still_has_no_quality_preference(self):
+        """Guards against accidentally over-mapping — healthy_living etc.
+        should keep using keyword signal only, not gain a quality filter."""
+        from ai_commerce.services import _effective_quality_preference
+        from ai_commerce.models import ShoppingSession
+        from ecommerce.models import OnlineCustomer
+
+        customer = OnlineCustomer.objects.create(
+            full_name="Goal Test Customer 3", email="goal_test3@example.com", phone="0000000009",
+        )
+        customer.set_password("testpass123")
+        customer.save()
+
+        session = ShoppingSession.objects.create(
+            customer=customer, mode='shop_by_goal', goal='healthy_living',
+        )
+        self.assertIsNone(_effective_quality_preference(session))

@@ -30,7 +30,7 @@
         <div>
             <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Churn Risk</div>
             <div style="font-weight:700; font-size:1.1rem;">
-                {% if snapshot.churn_risk_score is not None %}{{ snapshot.churn_risk_score|floatformat:0 }}%{% else %}—{% endif %}
+                {% if snapshot.churn_risk_percent is not None %}{{ snapshot.churn_risk_percent }}%{% else %}—{% endif %}
             </div>
         </div>
         <div>
@@ -79,7 +79,7 @@
                 <tr>
                     <td>{{ h.generated_at|date:"M d, Y H:i" }}</td>
                     <td>{{ h.get_segment_display }}</td>
-                    <td>{% if h.churn_risk_score is not None %}{{ h.churn_risk_score|floatformat:0 }}%{% else %}—{% endif %}</td>
+                    <td>{% if h.churn_risk_percent is not None %}{{ h.churn_risk_percent }}%{% else %}—{% endif %}</td>
                     <td>{{ h.get_prediction_method_display }}</td>
                 </tr>
                 {% endfor %}

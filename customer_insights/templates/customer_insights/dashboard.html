@@ -53,11 +53,11 @@
                     <td>
                         {% if row.snapshot and row.snapshot.churn_risk_score is not None %}
                             {% if row.snapshot.churn_risk_score >= 0.6 %}
-                                <span class="badge-modern badge-danger">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                                <span class="badge-modern badge-danger">{{ row.snapshot.churn_risk_percent }}%</span>
                             {% elif row.snapshot.churn_risk_score >= 0.3 %}
-                                <span class="badge-modern badge-warning">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                                <span class="badge-modern badge-warning">{{ row.snapshot.churn_risk_percent }}%</span>
                             {% else %}
-                                <span class="badge-modern badge-success">{{ row.snapshot.churn_risk_score|floatformat:0 }}%</span>
+                                <span class="badge-modern badge-success">{{ row.snapshot.churn_risk_percent }}%</span>
                             {% endif %}
                         {% else %}
                             —

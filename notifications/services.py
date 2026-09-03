@@ -27,6 +27,60 @@ def create_notif(title, message, notif_type, action_url='', action_label=''):
             action_label=action_label,
         )
 
+# ↓↓↓ INSERT THE NEW BLOCK HERE ↓↓↓
+
+MIN_COMPARISON_BASELINE = 1000  # Le — below this, a swing isn't a meaningful signal
+SALES_UP_THRESHOLD = 10    # existing threshold, unchanged
+SALES_DOWN_THRESHOLD = -20  # existing threshold, unchanged
+
+
+def calculate_sales_notification(today_sales, yesterday_sales):
+    """
+    Pure function: given today's and yesterday's completed-sales totals,
+    returns a dict describing the notification to create, or None if no
+    notification should fire. Contains no DB access so it can be tested
+    directly against the scenarios in the brief.
+
+    Baseline: 100% of yesterday's sales = unchanged. The returned
+    'change_percent' is the increase/decrease relative to that baseline
+    (e.g. +50 means "Sales Up 50%", -20 means "Sales Down 20%").
+    """
+    if yesterday_sales == 0:
+        if today_sales > 0:
+            return {
+                'title': "First Sales Recorded Today",
+                'message': f"Today's sales total Le {today_sales:,.2f} — there were no completed sales yesterday to compare against.",
+                'notif_type': 'success',
+            }
+        return None  # both zero — nothing meaningful to report
+
+    if yesterday_sales < MIN_COMPARISON_BASELINE:
+        # Yesterday's total is too small for a percentage to be a meaningful
+        # signal (a Le 5 baseline can turn an ordinary day into a "12000%"
+        # swing). Skip the percentage notification rather than show a
+        # misleading number.
+        return None
+
+    if today_sales <= 0:
+        return None
+
+    change_percent = ((today_sales - yesterday_sales) / yesterday_sales) * 100
+
+    if change_percent >= SALES_UP_THRESHOLD:
+        return {
+            'title': f"Sales Up {change_percent:.0f}% Today!",
+            'message': f"Today's sales (Le {today_sales:,.2f}) are {change_percent:.0f}% higher than yesterday (Le {yesterday_sales:,.2f}). Great performance!",
+            'notif_type': 'success',
+        }
+    elif change_percent <= SALES_DOWN_THRESHOLD:
+        return {
+            'title': f"Sales Down {abs(change_percent):.0f}% Today",
+            'message': f"Today's sales (Le {today_sales:,.2f}) are {abs(change_percent):.0f}% lower than yesterday. Consider running a promotion.",
+            'notif_type': 'warning',
+        }
+    return None
+
+# ↑↑↑ END OF NEW BLOCK ↑↑↑
 
 def generate_notifications():
 
@@ -67,24 +121,15 @@ def generate_notifications():
         sale_date__date=yesterday, status='completed'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
 
-    if yesterday_sales > 0 and today_sales > 0:
-        change = ((today_sales - yesterday_sales) / yesterday_sales) * 100
-        if change >= 10:
-            create_notif(
-                title=f"Sales Up {change:.0f}% Today!",
-                message=f"Today's sales (Le {today_sales:,.2f}) are {change:.0f}% higher than yesterday (Le {yesterday_sales:,.2f}). Great performance!",
-                notif_type='success',
-                action_url='/sales/',
-                action_label='View Sales',
-            )
-        elif change <= -20:
-            create_notif(
-                title=f"Sales Down {abs(change):.0f}% Today",
-                message=f"Today's sales (Le {today_sales:,.2f}) are {abs(change):.0f}% lower than yesterday. Consider running a promotion.",
-                notif_type='warning',
-                action_url='/sales/',
-                action_label='View Sales',
-            )
+    sales_notif = calculate_sales_notification(today_sales, yesterday_sales)
+    if sales_notif:
+        create_notif(
+            title=sales_notif['title'],
+            message=sales_notif['message'],
+            notif_type=sales_notif['notif_type'],
+            action_url='/sales/',
+            action_label='View Sales',
+        )
 
     # ===== DEMAND INTELLIGENCE =====
     week_requests = CustomerRequest.objects.filter(
