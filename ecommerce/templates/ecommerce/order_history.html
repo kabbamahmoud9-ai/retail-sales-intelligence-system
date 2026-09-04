@@ -21,15 +21,15 @@
         <tbody>
             {% for order in orders %}
             <tr>
-                <td style="font-family:monospace; font-weight:600;">{{ order.order_reference }}</td>
-                <td style="color:var(--text-muted); font-size:0.9rem;">{{ order.order_date|date:"d M Y" }}</td>
-                <td style="color:var(--text-muted);">{{ order.items.count }}</td>
-                <td style="font-weight:600; color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</td>
-                <td style="font-size:0.85rem;">{{ order.get_payment_method_display }}</td>
-                <td>
+                <td data-label="Order Ref" style="font-family:monospace; font-weight:600;">{{ order.order_reference }}</td>
+                <td data-label="Date" style="color:var(--text-muted); font-size:0.9rem;">{{ order.order_date|date:"d M Y" }}</td>
+                <td data-label="Items" style="color:var(--text-muted);">{{ order.items.count }}</td>
+                <td data-label="Total" style="font-weight:600; color:var(--primary-color);">Le {{ order.total_amount|floatformat:2 }}</td>
+                <td data-label="Payment" style="font-size:0.85rem;">{{ order.get_payment_method_display }}</td>
+                <td data-label="Status">
                     <span class="order-status-badge status-{{ order.status }}">{{ order.status }}</span>
                 </td>
-             <td>
+             <td data-label="">
                     <div style="display:flex; gap:8px; align-items:center;">
                         <a href="{% url 'ecommerce:order_detail' order.id %}" class="btn-secondary-modern" style="padding:0.35rem 0.9rem; font-size:0.82rem; text-decoration:none;">View</a>
                         {% if order.status == 'pending' %}

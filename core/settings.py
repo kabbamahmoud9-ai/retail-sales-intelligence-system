@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.247',  '10.59.6.120',  '10.16.129.1',  '10.177.122.24']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.247',  '10.59.6.120',  '10.16.129.1',  '10.177.122.24', '192.168.1.245']
 
 
 # Application definition
@@ -94,7 +94,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
+          'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),

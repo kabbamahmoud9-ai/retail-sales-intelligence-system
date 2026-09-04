@@ -119,3 +119,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }).catch(() => {});
 });
+
+// ===== STORE MOBILE NAV =====
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('storeNavToggle');
+    const links = document.getElementById('storeNavLinks');
+    const overlay = document.getElementById('storeNavOverlay');
+    if (toggle && links && overlay) {
+        toggle.addEventListener('click', function() {
+            const isOpen = links.classList.toggle('open');
+            overlay.classList.toggle('open', isOpen);
+            toggle.setAttribute('aria-expanded', isOpen);
+        });
+        overlay.addEventListener('click', function() {
+            links.classList.remove('open');
+            overlay.classList.remove('open');
+            toggle.setAttribute('aria-expanded', false);
+        });
+        links.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                links.classList.remove('open');
+                overlay.classList.remove('open');
+                toggle.setAttribute('aria-expanded', false);
+            });
+        });
+    }
+});
