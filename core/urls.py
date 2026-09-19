@@ -22,4 +22,5 @@ urlpatterns = [
     path('blockchain/', include('blockchain.urls')),
     path('store/visual-search/', include('visual_search.urls')),
     path('customer-insights/', include('customer_insights.urls')),
+    path('forecasting/', include('forecasting.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

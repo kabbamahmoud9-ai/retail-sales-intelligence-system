@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Demand Forecasts{% endblock %}
+{% block page_title %}Demand Forecasts{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Demand Forecasts</h1>
+        <p>AI-generated weekly demand predictions per product</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Period</th>
+                    <th>Predicted Qty</th>
+                    <th>Historical Avg</th>
+                    <th>Trend</th>
+                    <th>Confidence</th>
+                    <th>Recommended Restock</th>
+                    <th>Generated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in forecasts %}
+                <tr>
+                    <td style="font-weight:600;">{{ f.product.product_name }}</td>
+                    {% if f.has_sufficient_data %}
+                        <td>{{ f.forecast_period_start }} – {{ f.forecast_period_end }}</td>
+                        <td>{{ f.predicted_quantity|default_if_none:"—" }}</td>
+                        <td>{{ f.historical_average|default_if_none:"—" }}</td>
+                        <td>
+                            {% if f.trend == 'increasing' %}
+                                <span class="badge-modern badge-success"><i class="bi bi-graph-up-arrow"></i> Increasing</span>
+                            {% elif f.trend == 'decreasing' %}
+                                <span class="badge-modern badge-danger"><i class="bi bi-graph-down-arrow"></i> Decreasing</span>
+                            {% else %}
+                                <span class="badge-modern badge-warning"><i class="bi bi-dash-lg"></i> Stable</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ f.confidence_score|default_if_none:"—" }}%</td>
+                        <td>{{ f.recommended_restock_quantity|default_if_none:"—" }}</td>
+                    {% else %}
+                        <td colspan="6" style="color:var(--text-muted); font-style:italic;">
+                            {{ f.insufficient_data_message|default:"Insufficient historical data for a forecast." }}
+                        </td>
+                    {% endif %}
+                    <td>{{ f.generated_at|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <i class="bi bi-graph-up"></i>
+                        <p>No forecasts generated yet</p>
+                        <span>Run generate_forecasts_for_all() to populate this page</span>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
